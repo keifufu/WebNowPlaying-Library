@@ -1,0 +1,8 @@
+build
+dist
+tests/cws/*
+!tests/cws/*/
+!tests/cws/*.*
+tests/cws/reports
+tests/libwnp/*
+!tests/libwnp/*.*
