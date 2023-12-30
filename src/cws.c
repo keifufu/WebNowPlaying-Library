@@ -10,7 +10,7 @@
 #define MSG_NOSIGNAL 0
 #define ssize_t SSIZE_T
 #define strtok_r strtok_s
-#define _WIN32_WINNT 0x0A00 ^
+#define _WIN32_WINNT 0x0A00
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -135,7 +135,7 @@ static ssize_t sendn_client(cws_client_t* client, const void* buf, size_t n, int
 
   thread_mutex_lock(&client->lock);
   while (bytes < n) {
-    ret = send(client->fd, buf + bytes, n - bytes, flags);
+    ret = send(client->fd, (char*)buf + bytes, n - bytes, flags);
     if (ret == -1) {
       thread_mutex_unlock(&client->lock);
       return -1;

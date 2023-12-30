@@ -1,6 +1,5 @@
 #include "wnp.h"
 #include "cws.h"
-#include "pthread.h"
 #include "thread.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -455,7 +454,7 @@ char* wnp_get_cover_path(int id)
 
 #ifdef _WIN32
   char* tmp = getenv("TEMP");
-  if (tmp == NULL || strlen(home) + strlen(file_name) + 2 > WNP_BUFF_LEN) {
+  if (tmp == NULL || strlen(tmp) + strlen(file_name) + 2 > WNP_BUFF_LEN) {
     return NULL;
   }
 

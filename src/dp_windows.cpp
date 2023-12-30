@@ -2,7 +2,9 @@
 // I hate this file as much as I hate windows
 #include <windows.h>
 
+#define THREAD_IMPLEMENTATION
 #include "thread.h"
+
 #include "wnp.h"
 #include <codecvt>
 #include <filesystem>
@@ -42,7 +44,7 @@ extern "C" struct wnp_events g_wnp_events;
 extern "C" struct wnp_player* wnp_create_player();
 extern "C" void wnp_free_player(struct wnp_player* player);
 extern "C" void wnp_recalculate_active_player();
-extern "C" char wnp_get_cover_path(int id);
+extern "C" char* wnp_get_cover_path(int id);
 extern "C" void wnp_assign_str(char dest[WNP_STR_LEN], char* str);
 extern "C" void wnp_set_event_result(int event_id, int result);
 
@@ -53,14 +55,14 @@ struct wnp_player_data {
 };
 
 struct wnp_dp_data {
-  char l_appid;
+  char l_appid[WNP_STR_LEN];
   bool should_remove;
   int position;
   winrt::Windows::Foundation::DateTime position_last_updated;
   MediaSession session;
 };
 
-int wnp_dp_is_appid_blocked(char l_appid[WNP_STR_LEN])
+int wnp_dp_is_appid_blocked(char* l_appid)
 {
   // Finding the AppID of apps is pretty simple, just run
   // `Get-StartApps | Where { $_.Name -eq "Firefox" }`
@@ -91,10 +93,8 @@ int wnp_dp_is_appid_blocked(char l_appid[WNP_STR_LEN])
     return 0;
 }
 
-char* wnp_dp_own_hstring(winrt::hstring hstring, int to_lower)
+void wnp_dp_own_hstring(winrt::hstring hstring, int to_lower, char str[WNP_STR_LEN])
 {
-  static char str[WNP_STR_LEN];
-
   std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
   std::string utf8_str = converter.to_bytes(hstring.c_str());
 
@@ -107,8 +107,6 @@ char* wnp_dp_own_hstring(winrt::hstring hstring, int to_lower)
 
   int len = strlen((char*)utf8_str.c_str());
   str[len < WNP_STR_LEN ? len : WNP_STR_LEN - 1] = '\0';
-
-  return str;
 }
 
 struct wnp_dp_data* wnp_get_dp_data(struct wnp_player* player)
@@ -142,16 +140,15 @@ long long wnp_dp_get_timestamp()
   return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::utc_clock::now().time_since_epoch()).count();
 }
 
-char* wnp_dp_get_player_name(MediaSession session)
+void wnp_dp_get_player_name(MediaSession session, char name[WNP_STR_LEN])
 {
-  char l_appid[WNP_STR_LEN] = wnp_dp_own_hstring(session.SourceAppUserModelId(), 1);
+  char l_appid[WNP_STR_LEN];
+  wnp_dp_own_hstring(session.SourceAppUserModelId(), 1, l_appid);
 
   if (strstr(l_appid, "spotify") != NULL) {
-    char name[WNP_STR_LEN];
-    wnp_assign_str(name, "Spotify Desktop");
-    return name;
+    wnp_assign_str(name, (char*)"Spotify Desktop");
   } else {
-    return wnp_dp_own_hstring(session.SourceAppUserModelId(), 0);
+    wnp_dp_own_hstring(session.SourceAppUserModelId(), 0, name);
   }
 }
 
@@ -244,15 +241,18 @@ void wnp_dp_on_media_properties_changed(MediaSession session)
       }
     }
 
-    char artist[WNP_STR_LEN] = wnp_dp_own_hstring(info.Artist(), 0);
+    char artist[WNP_STR_LEN];
+    wnp_dp_own_hstring(info.Artist(), 0, artist);
     wnp_assign_str(player->artist, artist);
 
-    char album[WNP_STR_LEN] = wnp_dp_own_hstring(info.AlbumTitle(), 0);
+    char album[WNP_STR_LEN];
+    wnp_dp_own_hstring(info.AlbumTitle(), 0, album);
     wnp_assign_str(player->album, album);
 
-    char new_title[WNP_STR_LEN] = wnp_dp_own_hstring(info.Title(), 0);
+    char new_title[WNP_STR_LEN];
+    wnp_dp_own_hstring(info.Title(), 0, new_title);
     if (strcmp(player->title, new_title) != 0) {
-      wnp_assign_str(player->title, title);
+      wnp_assign_str(player->title, new_title);
       if (strlen(new_title) == 0) {
         player->active_at = 0;
       } else {
@@ -361,7 +361,8 @@ void wnp_dp_on_sessions_changed(MediaSessionManager manager)
   auto sessions = manager.GetSessions();
   for (int i = 0; i < sessions.Size(); i++) {
     MediaSession session = sessions.GetAt(i);
-    char l_appid[WNP_STR_LEN] = wnp_dp_own_hstring(session.SourceAppUserModelId(), 1);
+    char l_appid[WNP_STR_LEN];
+    wnp_dp_own_hstring(session.SourceAppUserModelId(), 1, l_appid);
 
     if (!wnp_dp_is_appid_blocked(l_appid)) {
       // If we already track the player, unmark should_remove and continue.
@@ -392,14 +393,9 @@ void wnp_dp_on_sessions_changed(MediaSessionManager manager)
       struct wnp_player_data* player_data = (struct wnp_player_data*)player->_data;
       player_data->dp_data = dp_data;
 
-      char* name = wnp_dp_get_player_name(session);
-      if (name == NULL) {
-        wnp_unlock(player);
-        wnp_free_player(player);
-        continue;
-      }
-
-      player->name = name;
+      char name[WNP_STR_LEN];
+      wnp_dp_get_player_name(session, name);
+      wnp_assign_str(player->name, name);
       player->created_at = wnp_dp_get_timestamp();
       player->is_desktop_player = 1;
       player->rating_system = WNP_RATING_SYSTEM_NONE;
@@ -453,15 +449,15 @@ void wnp_dp_update_thread()
     for (int i = 0; i < WNP_MAX_PLAYERS; i++) {
       if (g_wnp_players[i].id != -1 && g_wnp_players[i].is_desktop_player && g_wnp_players[i].state == WNP_STATE_PLAYING &&
           g_wnp_players[i].duration != 0) {
-        wnp_lock(player);
-        struct wnp_dp_data* dp_data = wnp_get_dp_data(g_wnp_players[i]);
+        wnp_lock(&g_wnp_players[i]);
+        struct wnp_dp_data* dp_data = wnp_get_dp_data(&g_wnp_players[i]);
         auto last_updated = dp_data->position_last_updated.time_since_epoch();
         auto now = winrt::Windows::Foundation::DateTime::clock::now().time_since_epoch();
         long long start_time = std::chrono::duration_cast<std::chrono::seconds>(last_updated).count();
         long long end_time = std::chrono::duration_cast<std::chrono::seconds>(now).count();
         int delay = (int)(end_time - start_time);
         g_wnp_players[i].position = dp_data->position + delay;
-        wnp_unlock(player);
+        wnp_unlock(&g_wnp_players[i]);
       }
     }
     thread_mutex_unlock(&g_wnp_players_mutex);

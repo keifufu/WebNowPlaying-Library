@@ -2,8 +2,8 @@
 CLEAN = rm -rf build
 MKDIR = mkdir -p build/obj
 CFLAGS = -Wall -Iinclude -Wno-unknown-pragmas -Wno-int-to-void-pointer-cast
-# CFLAGS += -O2
-CFLAGS += -g
+CFLAGS += -O2
+# CFLAGS += -g
 
 ifeq ($(OS),Windows_NT)
 	CLEAN = rmdir /s /q build
