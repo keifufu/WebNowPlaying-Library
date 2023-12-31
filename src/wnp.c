@@ -629,7 +629,7 @@ void wnp_ws_on_open(cws_client_t* client)
 void wnp_ws_on_close(cws_client_t* client)
 {
   thread_mutex_lock(&g_wnp_players_mutex);
-  for (size_t i = 1; i < WNP_MAX_PLAYERS; i++) {
+  for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
     if (g_wnp_players[i].id != -1 && !g_wnp_players[i].is_desktop_player &&
         ((struct wnp_player_data*)g_wnp_players[i]._data)->conn_data->client == client) {
       if (g_wnp_events.on_player_removed != NULL) {
@@ -744,6 +744,8 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
     struct wnp_player_data* player_data = player->_data;
     player_data->conn_data = conn_data;
 
+    wnp_parse_player_text(player, player_text);
+
     thread_mutex_lock(&g_wnp_cover_buffers_mutex);
     for (size_t i = 0; i < WNP_MAX_COVER_BUFFERS; i++) {
       if (g_wnp_cover_buffers[i] != NULL && g_wnp_cover_buffers[i]->client == client && g_wnp_cover_buffers[i]->port_id == id) {
@@ -762,7 +764,6 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
     }
     thread_mutex_unlock(&g_wnp_cover_buffers_mutex);
 
-    wnp_parse_player_text(player, player_text);
     if (g_wnp_events.on_player_added != NULL) {
       g_wnp_events.on_player_added(player);
     }
@@ -771,13 +772,13 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
   case PLAYER_UPDATED: {
     char* id_str = strtok(data_str, " ");
     if (id_str == NULL) return;
+    int id = atoi(id_str);
 
     char* player_text = strtok(NULL, "");
     if (player_text == NULL) return;
 
-    int id = atoi(id_str);
     thread_mutex_lock(&g_wnp_players_mutex);
-    for (size_t i = 1; i < WNP_MAX_PLAYERS; i++) {
+    for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
       struct wnp_conn_data* conn_data = wnp_get_conn_data(&g_wnp_players[i]);
       if (conn_data != NULL && conn_data->port_id == id && conn_data->client == client) {
         wnp_parse_player_text(&g_wnp_players[i], player_text);
