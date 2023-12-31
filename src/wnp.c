@@ -440,37 +440,31 @@ struct wnp_conn_data* wnp_get_conn_data(struct wnp_player* player)
  * ===================
  */
 
-char* wnp_get_cover_path(int id)
+int wnp_get_cover_path(int id, char out[WNP_BUFF_LEN])
 {
-  static char path[WNP_BUFF_LEN];
-  static bool path_computed = false;
-
-  if (path_computed) {
-    return path;
-  }
-
   char file_name[WNP_BUFF_LEN];
   snprintf(file_name, WNP_BUFF_LEN, "libwnp-cover-%d.png", id);
 
 #ifdef _WIN32
   char* tmp = getenv("TEMP");
   if (tmp == NULL || strlen(tmp) + strlen(file_name) + 2 > WNP_BUFF_LEN) {
-    return NULL;
+    return 1;
   }
 
-  snprintf(path, WNP_BUFF_LEN, "file://%s\\libwnp-cover-%d.png", tmp, id);
+  snprintf(out, WNP_BUFF_LEN, "file://%s\\%s", tmp, file_name);
 #else
-  snprintf(path, WNP_BUFF_LEN, "file:///tmp/libwnp-cover-%d.png", id);
+  snprintf(out, WNP_BUFF_LEN, "file:///tmp/%s", file_name);
 #endif
 
-  path_computed = true;
-  return path;
+  return 0;
 }
 
 void wnp_write_cover(int id, void* data, uint64_t size)
 {
-  char* file_path = wnp_get_cover_path(id);
-  if (file_path == NULL) return;
+  char file_path[WNP_BUFF_LEN];
+  int ret = wnp_get_cover_path(id, file_path);
+  if (ret != 0) return;
+
   FILE* file = fopen(file_path + 7, "wb");
   if (file == NULL) {
     return;
@@ -706,8 +700,9 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
     }
 
     wnp_write_cover(player->id, (void*)data, data_size);
-    char* cover_path = wnp_get_cover_path(player->id);
-    if (cover_path != NULL) {
+    char cover_path[WNP_BUFF_LEN];
+    int ret = wnp_get_cover_path(player->id, cover_path);
+    if (ret == 0) {
       wnp_lock(player);
       wnp_assign_str(player->cover, cover_path);
       wnp_unlock(player);
@@ -744,14 +739,13 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
     struct wnp_player_data* player_data = player->_data;
     player_data->conn_data = conn_data;
 
-    wnp_parse_player_text(player, player_text);
-
     thread_mutex_lock(&g_wnp_cover_buffers_mutex);
     for (size_t i = 0; i < WNP_MAX_COVER_BUFFERS; i++) {
       if (g_wnp_cover_buffers[i] != NULL && g_wnp_cover_buffers[i]->client == client && g_wnp_cover_buffers[i]->port_id == id) {
         wnp_write_cover(player->id, g_wnp_cover_buffers[i]->data, g_wnp_cover_buffers[i]->data_size);
-        char* cover_path = wnp_get_cover_path(player->id);
-        if (cover_path != NULL) {
+        char cover_path[WNP_BUFF_LEN];
+        int ret = wnp_get_cover_path(player->id, cover_path);
+        if (ret == 0) {
           wnp_lock(player);
           wnp_assign_str(player->cover, cover_path);
           wnp_unlock(player);
@@ -764,6 +758,7 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
     }
     thread_mutex_unlock(&g_wnp_cover_buffers_mutex);
 
+    wnp_parse_player_text(player, player_text);
     if (g_wnp_events.on_player_added != NULL) {
       g_wnp_events.on_player_added(player);
     }
