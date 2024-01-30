@@ -6,3 +6,8 @@ tests/cws/*
 tests/cws/reports
 tests/libwnp/*
 !tests/libwnp/*.*
+
+
+# Node Files for javascript bindings
+node_modules
+package-lock.json
