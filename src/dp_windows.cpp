@@ -1,3 +1,4 @@
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 // Only reason this is c++ is because of winrt
 // I hate this file as much as I hate windows
 #include <windows.h>
@@ -137,7 +138,7 @@ struct wnp_player* wnp_dp_get_player_from_session(MediaSession session)
 
 long long wnp_dp_get_timestamp()
 {
-  return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::utc_clock::now().time_since_epoch()).count();
+  return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 void wnp_dp_get_player_name(MediaSession session, char name[WNP_STR_LEN])
