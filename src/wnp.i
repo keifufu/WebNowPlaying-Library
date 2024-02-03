@@ -1,4 +1,4 @@
-%module example
+%module wnp
 %{
 /* Includes the header in the wrapper code */
 #include "wnp.h"
