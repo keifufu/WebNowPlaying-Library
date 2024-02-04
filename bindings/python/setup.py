@@ -2,7 +2,7 @@ from setuptools import setup, Extension
 
 wnp = Extension(
     "_wnp",
-    sources=["wnp_wrap.c", "wnp.c", "cws.c", "dp_windows.cpp"],
+    sources=["../src/wnp_wrap.c", "../src/wnp.c", "../src/cws.c", "../src/dp_windows.cpp"],
     extra_compile_args=[
         "/std:c++17",
         "/D_CRT_SECURE_NO_WARNINGS",
