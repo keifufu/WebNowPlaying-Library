@@ -9,3 +9,7 @@ tests/libwnp/*
 
 # vscode
 .vscode
+
+# swig generated files for language bindings
+src/wnp_wrap.c
+src/wnp.py
