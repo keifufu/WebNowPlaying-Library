@@ -23,4 +23,5 @@ setup(
     ext_modules=[wnp],
     py_modules=["wnp", "__init__"],
     license="MIT",
+    packages=["wnp"],
 )
