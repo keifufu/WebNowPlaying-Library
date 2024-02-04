@@ -1,4 +1,4 @@
-from . import wnp
+from . import wnp_wrapper
 
 
 
@@ -11,14 +11,14 @@ from . import wnp
 ######################################
 ######################################
 
-def start(port:int, adapter_version:str, events:wnp.wnp_events=None):
+def start(port:int, adapter_version:str, events:wnp_wrapper.wnp_events=None):
     """
     Start the WebNowPlaying adapter.
 
     Args:
         port (int): The port to start the adapter on. (Required)
         adapter_version (str): The version of the adapter. (Required)
-        events (wnp.wnp_events): The events to use for the adapter. (Default: None)
+        events (wnp_wrapper.wnp_events): The events to use for the adapter. (Default: None)
 
     Returns:
         Result of the operation.
@@ -27,7 +27,7 @@ def start(port:int, adapter_version:str, events:wnp.wnp_events=None):
         None.
         
     """
-    return wnp.wnp_start(port, adapter_version, events)
+    return wnp_wrapper.wnp_start(port, adapter_version, events)
 
 def stop():
     """
@@ -43,7 +43,7 @@ def stop():
         None.
         
     """
-    return wnp.wnp_stop()
+    return wnp_wrapper.wnp_stop()
 
 def get_state():
     """
@@ -59,7 +59,7 @@ def get_state():
         None.
         
     """
-    return wnp.wnp_is_started()
+    return wnp_wrapper.wnp_is_started()
 
 def get_player(id:int, always_return_player:bool):
     """
@@ -73,7 +73,7 @@ def get_player(id:int, always_return_player:bool):
     Player: The player object.
 
     """
-    return wnp.wnp_get_player(id, always_return_player)
+    return wnp_wrapper.wnp_get_player(id, always_return_player)
 
 def get_active_player(always_return_player:bool):
     """
@@ -86,20 +86,20 @@ def get_active_player(always_return_player:bool):
     Player: The active player object.
 
     """
-    return wnp.wnp_get_active_player(always_return_player)
+    return wnp_wrapper.wnp_get_active_player(always_return_player)
 
-def get_all_players(players:wnp.wnp_players):
+def get_all_players(players:wnp_wrapper.wnp_players):
     """
     Get all players.
 
     Parameters:
-    players (wnp.wnp_players): The players object to fill. (Required)
+    players (wnp_wrapper.wnp_players): The players object to fill. (Required)
 
     Returns:
     None.
 
     """
-    return wnp.wnp_get_all_players(players)
+    return wnp_wrapper.wnp_get_all_players(players)
 
 
 
@@ -118,7 +118,7 @@ class MediaInfo:
     """
 
     def __init__(self):
-        self.player = wnp.wnp_get_active_player(True)
+        self.player = wnp_wrapper.wnp_get_active_player(True)
 
     @property
     def id(self):
@@ -425,7 +425,7 @@ class MediaControls:
         Returns:
             bool: True if the state change was successful, False otherwise.
         """
-        return wnp.wnp_try_set_state(self.player, state)
+        return wnp_wrapper.wnp_try_set_state(self.player, state)
 
     def try_skip_previous(self):
         """
@@ -434,7 +434,7 @@ class MediaControls:
         Returns:
             bool: True if the operation was successful, False otherwise.
         """
-        return wnp.wnp_try_skip_previous(self.player)
+        return wnp_wrapper.wnp_try_skip_previous(self.player)
 
     def try_skip_next(self):
         """
@@ -443,7 +443,7 @@ class MediaControls:
         Returns:
             bool: True if the operation was successful, False otherwise.
         """
-        return wnp.wnp_try_skip_next(self.player)
+        return wnp_wrapper.wnp_try_skip_next(self.player)
 
     def try_set_position(self, seconds):
         """
@@ -455,7 +455,7 @@ class MediaControls:
         Returns:
             bool: True if the operation was successful, False otherwise.
         """
-        return wnp.wnp_try_set_position(self.player, seconds)
+        return wnp_wrapper.wnp_try_set_position(self.player, seconds)
 
     def try_set_volume(self, volume):
         """
@@ -467,7 +467,7 @@ class MediaControls:
         Returns:
             bool: True if the operation was successful, False otherwise.
         """
-        return wnp.wnp_try_set_volume(self.player, volume)
+        return wnp_wrapper.wnp_try_set_volume(self.player, volume)
 
     def try_set_rating(self, rating):
         """
@@ -479,7 +479,7 @@ class MediaControls:
         Returns:
             bool: True if the operation was successful, False otherwise.
         """
-        return wnp.wnp_try_set_rating(self.player, rating)
+        return wnp_wrapper.wnp_try_set_rating(self.player, rating)
 
     def try_toggle_repeat(self):
         """
@@ -488,4 +488,4 @@ class MediaControls:
         Returns:
             bool: True if the operation was successful, False otherwise.
         """
-        return wnp.wnp_try_toggle_repeat(self.player)
+        return wnp_wrapper.wnp_try_toggle_repeat(self.player)
