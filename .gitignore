@@ -12,7 +12,7 @@ tests/libwnp/*
 
 # swig generated files for language bindings
 src/wnp_wrap.c
-bindings/python/wnp/wnp.py
+bindings/python/wnp/wnp_wrapper.py
 
 # python dist files
 wnp.egg-info
