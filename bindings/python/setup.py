@@ -21,5 +21,6 @@ setup(
     author="keifufu, YasogaN",
     description="""WebNowPlaying is a browser extension that allows you to control music players from a browser popup. This is a Python wrapper for the WebNowPlaying-Library.""",
     ext_modules=[wnp],
-    py_modules=["wnp"],
+    py_modules=["wnp", "__init__"],
+    license="MIT",
 )
