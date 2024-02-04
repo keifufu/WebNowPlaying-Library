@@ -12,4 +12,4 @@ tests/libwnp/*
 
 # swig generated files for language bindings
 src/wnp_wrap.c
-src/wnp.py
+bindings/python/wnp.py
