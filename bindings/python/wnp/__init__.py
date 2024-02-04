@@ -1,4 +1,4 @@
-import wnp
+from . import wnp
 
 
 
