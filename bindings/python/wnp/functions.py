@@ -45,7 +45,7 @@ def stop():
     """
     return wnp_wrapper.wnp_stop()
 
-def get_state():
+def is_connected():
     """
     Get the state of the WebNowPlaying adapter.
 
@@ -53,7 +53,7 @@ def get_state():
         None.
 
     Returns:
-        The state of the WebNowPlaying adapter.
+        The True if the adapter is connected, False otherwise.
 
     Raises:
         None.
