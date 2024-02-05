@@ -1,11 +1,8 @@
 from setuptools import setup, Extension
 
-with open("../../VERSION", "r") as version_file:
-    version = version_file.read().strip()
-
 wnp_wrapper = Extension(
-    "_wnp_wrapper",
-    sources=["../../src/wnp_wrap.c", "../../src/wnp.c", "../../src/cws.c", "../../src/dp_windows.cpp"],
+    "wnp._wnp_wrapper",
+    sources=["src/wnp_wrap.c", "src/wnp.c", "src/cws.c", "src/dp_windows.cpp"],
     extra_compile_args=[
         "/std:c++17",
         "/D_CRT_SECURE_NO_WARNINGS",
@@ -18,14 +15,16 @@ wnp_wrapper = Extension(
         ('_WIN32_WINNT', '0x0600'),
     ],
 )
+
 setup(
     name="wnp",
-    version=version,
+    version="3.0.0",
     author="keifufu, YasogaN",
     description="""WebNowPlaying is a browser extension that allows you to control music players from a browser popup. This is a Python wrapper for the WebNowPlaying-Library.""",
     ext_modules=[wnp_wrapper],
     packages=["wnp"],
-    package_dir={"": "."},
+    package_dir={"wnp": "wnp"},
+    package_data={"wnp": ["_wnp_wrapper*"]},
     license="MIT",
     url="https://github.com/keifufu/WebNowPlaying-Library/",
     classifiers=[
