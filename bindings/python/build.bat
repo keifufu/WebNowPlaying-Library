@@ -14,9 +14,10 @@ xcopy README.md bindings\python\ /y /q
 cd bindings\python
 ECHO Done 
 
-REM Create Packge
+REM Create Package
+pip install cibuildwheel
 ECHO Creating the Python package
-python -m build
+cibuildwheel --platform windows --output-dir dist
 
 REM Clean up
 ECHO Cleaning up
