@@ -20,10 +20,9 @@
           make linux64
         '';
         installPhase = ''
-          mkdir -p $out/lib
-          mkdir -p $out/include
+          mkdir -p $out/lib $out/include
           cp build/libwnp_linux_amd64.a $out/lib/libwnp.a
-          cp include/wnp.h $out/include/wnp.h
+          cp -r include/* $out/include/
         '';
       };
       devShells.default = pkgs.mkShell {
