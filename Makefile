@@ -1,14 +1,14 @@
 # There is no linux32 build since who even uses 32bit on linux
 CLEAN = rm -rf build
 MKDIR = mkdir -p build/obj
-CFLAGS = -Wall -Iinclude -Wno-unknown-pragmas -Wno-int-to-void-pointer-cast
+CFLAGS = -Wall -Isrc -Wno-unknown-pragmas -Wno-int-to-void-pointer-cast
 CFLAGS += -O2
 # CFLAGS += -g
 
 ifeq ($(OS),Windows_NT)
 	CLEAN = rmdir /s /q build
 	MKDIR = mkdir build\obj
-	CFLAGS = /Iinclude /Isrc/windows /std:c++20 /EHsc
+	CFLAGS = /Isrc /Isrc/windows /std:c++20 /EHsc
 	CFLAGS += /O2
 #	CFLAGS += /Zi /DEBUG
 #	LINK_FLAGS = /DEBUG
