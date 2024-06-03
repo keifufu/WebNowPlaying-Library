@@ -293,7 +293,8 @@ void wnp_recalculate_active_player()
         active_player = &g_wnp_players[i];
         max_active_at = g_wnp_players[i].active_at;
       } else if (g_wnp_players[i].state != WNP_STATE_PLAYING && g_wnp_players[i].active_at > max_active_at && !found_active) {
-        if (active_player != NULL && active_player->state != WNP_STATE_PLAYING) {
+        bool is_active_playing = active_player == NULL ? false : active_player->state == WNP_STATE_PLAYING;
+        if (!is_active_playing) {
           active_player = &g_wnp_players[i];
           max_active_at = g_wnp_players[i].active_at;
         }
