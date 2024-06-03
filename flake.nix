@@ -22,7 +22,7 @@
         installPhase = ''
           mkdir -p $out/lib $out/include
           cp build/libwnp_linux_amd64.a $out/lib/libwnp.a
-          cp  src/wnp.h $out/include/
+          cp src/wnp.h $out/include/
         '';
       };
       devShells.default = pkgs.mkShell {
