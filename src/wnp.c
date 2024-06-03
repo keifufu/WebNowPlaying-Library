@@ -1014,7 +1014,7 @@ struct wnp_player* wnp_get_player(int id, bool always_return_player)
   }
 
   thread_mutex_lock(&g_wnp_players_mutex);
-  if (g_wnp_players[id].id != -1 && always_return_player) {
+  if (g_wnp_players[id].id != id && always_return_player) {
     thread_mutex_unlock(&g_wnp_players_mutex);
     return &WNP_DEFAULT_PLAYER;
   }
