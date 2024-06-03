@@ -794,15 +794,19 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
   }
   case PLAYER_REMOVED: {
     int id = atoi(data_str);
+    thread_mutex_lock(&g_wnp_players_mutex);
     for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
       struct wnp_conn_data* conn_data = wnp_get_conn_data(&g_wnp_players[i]);
       if (conn_data != NULL && conn_data->port_id == id && conn_data->client == client) {
+        thread_mutex_unlock(&g_wnp_players_mutex);
         if (g_wnp_events.on_player_removed != NULL) {
           g_wnp_events.on_player_removed(&g_wnp_players[i]);
         }
         wnp_free_player(&g_wnp_players[i]);
+        thread_mutex_lock(&g_wnp_players_mutex);
       }
     }
+    thread_mutex_unlock(&g_wnp_players_mutex);
     break;
   }
   case EVENT_RESULT: {
