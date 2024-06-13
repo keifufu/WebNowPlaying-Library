@@ -10,7 +10,7 @@ ifeq ($(OS),Windows_NT)
 	MKDIR = mkdir build\obj
 	CFLAGS = /Isrc /Isrc/windows /std:c++20 /EHsc
 	CFLAGS += /O2
-#	CFLAGS += /Zi /DEBUG
+#	CFLAGS += /Zi
 #	LINK_FLAGS = /DEBUG
 endif
 
