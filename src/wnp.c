@@ -101,7 +101,6 @@ struct wnp_cover_buffer {
   int port_id;
 };
 
-#define WNP_BUFF_LEN 128
 #define WNP_MAX_COVER_BUFFERS WNP_MAX_PLAYERS
 
 thread_mutex_t g_wnp_players_mutex;
@@ -138,7 +137,7 @@ extern void wnp_dp_try_set_shuffle(struct wnp_player* player, int event_id, bool
 
 char* wnp_nodp_filepath()
 {
-  static char path[WNP_BUFF_LEN];
+  static char path[WNP_STR_LEN];
   static bool path_computed = false;
 
   if (path_computed) {
@@ -148,7 +147,7 @@ char* wnp_nodp_filepath()
   char* file_name = ".wnp_nodp";
 #ifdef _WIN32
   char* home = getenv("USERPROFILE");
-  if (home == NULL || strlen(home) + strlen(file_name) + 2 > WNP_BUFF_LEN) {
+  if (home == NULL || strlen(home) + strlen(file_name) + 2 > WNP_STR_LEN) {
     return NULL;
   }
 
@@ -157,7 +156,7 @@ char* wnp_nodp_filepath()
   strcat(path, file_name);
 #else
   char* home = getenv("HOME");
-  if (home == NULL || strlen(home) + strlen(file_name) + 2 > WNP_BUFF_LEN) {
+  if (home == NULL || strlen(home) + strlen(file_name) + 2 > WNP_STR_LEN) {
     return NULL;
   }
 
@@ -446,20 +445,25 @@ struct wnp_conn_data* wnp_get_conn_data(struct wnp_player* player)
  * ===================
  */
 
-int wnp_get_cover_path(int id, char out[WNP_BUFF_LEN])
+int wnp_get_cover_path(int id, char out[WNP_STR_LEN])
 {
-  char file_name[WNP_BUFF_LEN];
-  snprintf(file_name, WNP_BUFF_LEN, "libwnp-cover-%d.png", id);
+  char file_name[WNP_STR_LEN];
+  snprintf(file_name, WNP_STR_LEN, "libwnp-cover-%d.png", id);
 
 #ifdef _WIN32
   char* tmp = getenv("TEMP");
-  if (tmp == NULL || strlen(tmp) + strlen(file_name) + 2 > WNP_BUFF_LEN) {
+  if (tmp == NULL || strlen(tmp) + strlen(file_name) + 2 > WNP_STR_LEN) {
     return 1;
   }
 
-  snprintf(out, WNP_BUFF_LEN, "file://%s\\%s", tmp, file_name);
+  for (int i = 0; tmp[i] != '\0'; i++) {
+    if (tmp[i] == '\\') {
+      tmp[i] = '/';
+    }
+  }
+  snprintf(out, WNP_STR_LEN, "file://%s/%s", tmp, file_name);
 #else
-  snprintf(out, WNP_BUFF_LEN, "file:///tmp/%s", file_name);
+  snprintf(out, WNP_STR_LEN, "file:///tmp/%s", file_name);
 #endif
 
   return 0;
@@ -467,7 +471,7 @@ int wnp_get_cover_path(int id, char out[WNP_BUFF_LEN])
 
 void wnp_write_cover(int id, void* data, uint64_t size)
 {
-  char file_path[WNP_BUFF_LEN];
+  char file_path[WNP_STR_LEN];
   int ret = wnp_get_cover_path(id, file_path);
   if (ret != 0) return;
 
@@ -604,10 +608,10 @@ int wnp_execute_event(struct wnp_player* player, enum wnp_event event, int data)
   }
   wnp_unlock(player);
 
-  char msg_buffer[WNP_BUFF_LEN];
+  char msg_buffer[WNP_STR_LEN];
   struct wnp_conn_data* conn_data = wnp_get_conn_data(player);
   if (conn_data != NULL) {
-    snprintf(msg_buffer, WNP_BUFF_LEN - 1, "%d %d %d %d", conn_data->port_id, event_id, event, data);
+    snprintf(msg_buffer, WNP_STR_LEN - 1, "%d %d %d %d", conn_data->port_id, event_id, event, data);
     cws_send(conn_data->client, msg_buffer, strlen(msg_buffer), CWS_TYPE_TEXT);
   }
   return event_id;
@@ -621,8 +625,8 @@ int wnp_execute_event(struct wnp_player* player, enum wnp_event event, int data)
 
 void wnp_ws_on_open(cws_client_t* client)
 {
-  char buffer[WNP_BUFF_LEN];
-  snprintf(buffer, WNP_BUFF_LEN - 1, "ADAPTER_VERSION %s;WNPLIB_REVISION 3", g_wnp_adapter_version);
+  char buffer[WNP_STR_LEN];
+  snprintf(buffer, WNP_STR_LEN - 1, "ADAPTER_VERSION %s;WNPLIB_REVISION 3", g_wnp_adapter_version);
   cws_send(client, buffer, strlen(buffer), CWS_TYPE_TEXT);
 }
 
@@ -708,7 +712,7 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
     }
 
     wnp_write_cover(player->id, (void*)data, data_size);
-    char cover_path[WNP_BUFF_LEN];
+    char cover_path[WNP_STR_LEN];
     int ret = wnp_get_cover_path(player->id, cover_path);
     if (ret == 0) {
       wnp_lock(player);
@@ -751,7 +755,7 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
     for (size_t i = 0; i < WNP_MAX_COVER_BUFFERS; i++) {
       if (g_wnp_cover_buffers[i] != NULL && g_wnp_cover_buffers[i]->client == client && g_wnp_cover_buffers[i]->port_id == id) {
         wnp_write_cover(player->id, g_wnp_cover_buffers[i]->data, g_wnp_cover_buffers[i]->data_size);
-        char cover_path[WNP_BUFF_LEN];
+        char cover_path[WNP_STR_LEN];
         int ret = wnp_get_cover_path(player->id, cover_path);
         if (ret == 0) {
           wnp_lock(player);
@@ -856,6 +860,7 @@ void wnp_init_globals(bool start)
 
   g_wnp_use_dp = wnp_read_use_dp();
   strncpy(g_wnp_adapter_version, "0.0.0", 5);
+  // memset not to initialize but to wipe the array
   memset(&g_wnp_events, 0, sizeof(g_wnp_events));
 
   if (start) {
