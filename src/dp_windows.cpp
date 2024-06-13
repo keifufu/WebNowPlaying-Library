@@ -44,7 +44,7 @@ extern "C" struct wnp_events g_wnp_events;
 extern "C" struct wnp_player* wnp_create_player();
 extern "C" void wnp_free_player(struct wnp_player* player);
 extern "C" void wnp_recalculate_active_player();
-extern "C" char* wnp_get_cover_path(int id);
+extern "C" int wnp_get_cover_path(int id, char out[WNP_STR_LEN]);
 extern "C" void wnp_assign_str(char dest[WNP_STR_LEN], char* str);
 extern "C" void wnp_set_event_result(int event_id, int result);
 
@@ -178,8 +178,15 @@ char* wnp_dp_write_thumbnail(StreamReference stream, char l_appid[WNP_STR_LEN], 
 {
   if (stream == NULL) return NULL;
 
-  char* cover_path = wnp_get_cover_path(player_id);
-  if (cover_path == NULL) return NULL;
+  char _cover_path[WNP_STR_LEN];
+  int ret = wnp_get_cover_path(player_id, _cover_path);
+  if (ret != 0) return NULL;
+  char* cover_path = strdup(_cover_path);
+  for (int i = 0; cover_path[i] != '\0'; i++) {
+    if (cover_path[i] == '/') {
+      cover_path[i] = '\\';
+    }
+  }
   cover_path += 7;
 
   std::filesystem::path cover_path_path = std::filesystem::path(cover_path);
@@ -218,6 +225,11 @@ char* wnp_dp_write_thumbnail(StreamReference stream, char l_appid[WNP_STR_LEN], 
     }
 
     cover_path -= 7;
+    for (int i = 0; cover_path[i] != '\0'; i++) {
+      if (cover_path[i] == '\\') {
+        cover_path[i] = '/';
+      }
+    }
     return cover_path;
   } catch (const winrt::hresult_error& ex) {
     return NULL;
@@ -238,6 +250,11 @@ void wnp_dp_on_media_properties_changed(MediaSession session)
       char* cover_src = wnp_dp_write_thumbnail(info.Thumbnail(), dp_data->l_appid, player->id);
       if (cover_src != NULL) {
         wnp_assign_str(player->cover_src, cover_src);
+        wnp_assign_str(player->cover, cover_src);
+        free(cover_src);
+      } else {
+        wnp_assign_str(player->cover_src, (char*)"");
+        wnp_assign_str(player->cover, (char*)"");
       }
     }
 
@@ -359,8 +376,10 @@ void wnp_dp_on_sessions_changed(MediaSessionManager manager)
   thread_mutex_unlock(&g_wnp_players_mutex);
 
   auto sessions = manager.GetSessions();
+  if (!sessions) return;
   for (int i = 0; i < sessions.Size(); i++) {
     MediaSession session = sessions.GetAt(i);
+    if (!session) continue;
     char l_appid[WNP_STR_LEN];
     wnp_dp_own_hstring(session.SourceAppUserModelId(), 1, l_appid);
 
