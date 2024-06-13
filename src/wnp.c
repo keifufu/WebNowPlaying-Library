@@ -223,7 +223,7 @@ struct wnp_player* wnp_create_player()
   thread_mutex_unlock(&g_wnp_players_mutex);
   if (player == NULL) return NULL;
 
-  struct wnp_player_data* player_data = (struct wnp_player_data*)malloc(sizeof(struct wnp_player_data));
+  struct wnp_player_data* player_data = (struct wnp_player_data*)calloc(1, sizeof(struct wnp_player_data));
   if (player_data == NULL) {
     return NULL;
   }
@@ -683,7 +683,7 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
       thread_mutex_lock(&g_wnp_cover_buffers_mutex);
       for (size_t i = 0; i < WNP_MAX_COVER_BUFFERS; i++) {
         if (g_wnp_cover_buffers[i] == NULL) {
-          struct wnp_cover_buffer* cover_buf = malloc(sizeof(struct wnp_cover_buffer));
+          struct wnp_cover_buffer* cover_buf = calloc(1, sizeof(struct wnp_cover_buffer));
           if (cover_buf == NULL) {
             break;
           }
@@ -692,7 +692,7 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
           cover_buf->data_size = data_size;
           cover_buf->port_id = received_id;
           // need to copy data since it gets freed after onmessage
-          cover_buf->data = malloc(data_size);
+          cover_buf->data = calloc(1, data_size);
           if (cover_buf->data == NULL) {
             free(cover_buf);
             break;
@@ -736,7 +736,7 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
     struct wnp_player* player = wnp_create_player();
     if (player == NULL) return;
 
-    struct wnp_conn_data* conn_data = (struct wnp_conn_data*)malloc(sizeof(struct wnp_conn_data));
+    struct wnp_conn_data* conn_data = (struct wnp_conn_data*)calloc(1, sizeof(struct wnp_conn_data));
     if (conn_data == NULL) {
       wnp_free_player(player);
       break;

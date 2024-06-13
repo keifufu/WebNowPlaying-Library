@@ -5,7 +5,7 @@ void normal_data()
 {
   struct wnp_player* player = wnp_create_player();
   assert(player != NULL);
-  struct wnp_conn_data* conn_data = (struct wnp_conn_data*)malloc(sizeof(struct wnp_conn_data));
+  struct wnp_conn_data* conn_data = (struct wnp_conn_data*)calloc(1, sizeof(struct wnp_conn_data));
   struct wnp_player_data* player_data = player->_data;
   player_data->conn_data = conn_data;
 
@@ -50,7 +50,7 @@ void invalid_data()
 {
   struct wnp_player* player = wnp_create_player();
   assert(player != NULL);
-  struct wnp_conn_data* conn_data = (struct wnp_conn_data*)malloc(sizeof(struct wnp_conn_data));
+  struct wnp_conn_data* conn_data = (struct wnp_conn_data*)calloc(1, sizeof(struct wnp_conn_data));
   struct wnp_player_data* player_data = player->_data;
   player_data->conn_data = conn_data;
   // Player will be filled with garbage data, but the program does not segfault.

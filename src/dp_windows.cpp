@@ -379,7 +379,7 @@ void wnp_dp_on_sessions_changed(MediaSessionManager manager)
       if (player == NULL) continue;
       wnp_lock(player);
 
-      struct wnp_dp_data* dp_data = (struct wnp_dp_data*)malloc(sizeof(struct wnp_dp_data));
+      struct wnp_dp_data* dp_data = (struct wnp_dp_data*)calloc(1, sizeof(struct wnp_dp_data));
       if (dp_data == NULL) {
         wnp_unlock(player);
         wnp_free_player(player);
