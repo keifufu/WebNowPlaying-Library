@@ -185,6 +185,11 @@ int wnp_stop();
 bool wnp_is_started();
 
 /**
+ * Whether desktop players are enabled or not.
+ */
+bool wnp_get_use_dp();
+
+/**
  * Locks a players mutex.
  */
 void wnp_lock(struct wnp_player* player);

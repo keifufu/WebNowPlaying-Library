@@ -999,6 +999,11 @@ bool wnp_is_started()
   return g_wnp_is_started;
 }
 
+bool wnp_get_use_dp()
+{
+  return g_wnp_use_dp;
+}
+
 void wnp_lock(struct wnp_player* player)
 {
   struct wnp_player_data* player_data = player->_data;
