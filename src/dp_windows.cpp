@@ -488,7 +488,6 @@ extern "C" void wnp_dp_start()
 {
   if (g_wnp_dp_is_started) return;
   g_wnp_dp_is_started = true;
-  winrt::init_apartment();
   g_wnp_dp_media_session_manager = MediaSessionManager::RequestAsync().get();
   wnp_dp_stop_thread = false;
   wnp_dp_thread = std::thread(wnp_dp_update_thread);
@@ -515,7 +514,6 @@ extern "C" void wnp_dp_stop()
     }
   }
   thread_mutex_unlock(&g_wnp_players_mutex);
-  winrt::uninit_apartment();
 }
 
 extern "C" void wnp_dp_free_dp_data(struct wnp_dp_data* dp_data)
