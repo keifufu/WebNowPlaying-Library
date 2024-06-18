@@ -576,6 +576,7 @@ extern "C" void wnp_dp_try_skip_previous(struct wnp_player* player, int event_id
     return;
   }
 
+  dp_data->session.TryChangePlaybackPositionAsync((int64_t)0);
   if (dp_data->session.TrySkipPreviousAsync().get()) {
     wnp_set_event_result(event_id, WNP_EVENT_SUCCEEDED);
   } else {
