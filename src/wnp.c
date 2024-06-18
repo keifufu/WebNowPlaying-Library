@@ -155,12 +155,17 @@ char* wnp_nodp_filepath()
   strcat(path, "\\");
   strcat(path, file_name);
 #else
-  char* home = getenv("HOME");
-  if (home == NULL || strlen(home) + strlen(file_name) + 2 > WNP_STR_LEN) {
+  // use $XDG_CACHE_HOME, fallback to just $HOME
+  char* dir = getenv("XDG_CACHE_HOME");
+  if (dir == NULL) {
+    dir = getenv("HOME");
+  }
+
+  if (dir == NULL || strlen(dir) + strlen(file_name) + 2 > WNP_STR_LEN) {
     return NULL;
   }
 
-  strcpy(path, home);
+  strcpy(path, dir);
   strcat(path, "/");
   strcat(path, file_name);
 #endif
