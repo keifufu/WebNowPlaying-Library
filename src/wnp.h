@@ -2,6 +2,7 @@
 #define LIBWNP_H
 
 #include <stdbool.h>
+#include <uchar.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,6 +45,9 @@ enum wnp_event_result {
  *
  * Actions on the player are not meant to be set here,
  * but via wnp_try... functions.
+ *
+ * All strings are UTF-8, if you need UTF-16 use
+ * `wnp_utf8_to_utf16`
  */
 #define WNP_STR_LEN 512
 struct wnp_player {
@@ -276,6 +280,11 @@ int wnp_get_remaining_seconds(struct wnp_player* player);
  *  - 6969 = "01:56:09"
  */
 void wnp_format_seconds(int seconds, bool pad_with_zeroes, char out_str[10]);
+
+/**
+ * Converts UTF-8 to UTF-16
+ */
+void wnp_utf8_to_utf16(unsigned char* input, int input_len, char16_t* output, int output_len);
 
 /* Base event functions */
 
