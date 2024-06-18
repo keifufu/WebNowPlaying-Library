@@ -281,7 +281,7 @@ void wnp_dp_on_media_properties_changed(MediaSession session)
     wnp_unlock(player);
 
     if (g_wnp_events.on_player_updated != NULL) {
-      g_wnp_events.on_player_updated(player);
+      g_wnp_events.on_player_updated(player, g_wnp_events.data);
     }
     wnp_recalculate_active_player();
   } catch (...) {
@@ -330,7 +330,7 @@ void wnp_dp_on_playback_info_changed(MediaSession session)
   wnp_unlock(player);
 
   if (g_wnp_events.on_player_updated != NULL) {
-    g_wnp_events.on_player_updated(player);
+    g_wnp_events.on_player_updated(player, g_wnp_events.data);
   }
   wnp_recalculate_active_player();
 }
@@ -358,7 +358,7 @@ void wnp_dp_on_timeline_properties_changed(MediaSession session)
   wnp_unlock(player);
 
   if (g_wnp_events.on_player_updated != NULL) {
-    g_wnp_events.on_player_updated(player);
+    g_wnp_events.on_player_updated(player, g_wnp_events.data);
   }
   wnp_recalculate_active_player();
 }
@@ -423,7 +423,7 @@ void wnp_dp_on_sessions_changed(MediaSessionManager manager)
       wnp_unlock(player);
 
       if (g_wnp_events.on_player_added != NULL) {
-        g_wnp_events.on_player_added(&g_wnp_players[i]);
+        g_wnp_events.on_player_added(&g_wnp_players[i], g_wnp_events.data);
       }
     }
   }
@@ -435,7 +435,7 @@ void wnp_dp_on_sessions_changed(MediaSessionManager manager)
     if (dp_data != NULL) {
       if (dp_data->should_remove) {
         if (g_wnp_events.on_player_removed != NULL) {
-          g_wnp_events.on_player_removed(&g_wnp_players[i]);
+          g_wnp_events.on_player_removed(&g_wnp_players[i], g_wnp_events.data);
         }
         thread_mutex_unlock(&g_wnp_players_mutex);
         wnp_free_player(&g_wnp_players[i]);
@@ -506,7 +506,7 @@ extern "C" void wnp_dp_stop()
   for (int i = 0; i < WNP_MAX_PLAYERS; i++) {
     if (g_wnp_players[i].id != -1 && g_wnp_players[i].is_desktop_player) {
       if (g_wnp_events.on_player_removed != NULL) {
-        g_wnp_events.on_player_removed(&g_wnp_players[i]);
+        g_wnp_events.on_player_removed(&g_wnp_players[i], g_wnp_events.data);
       }
       thread_mutex_unlock(&g_wnp_players_mutex);
       wnp_free_player(&g_wnp_players[i]);

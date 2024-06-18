@@ -148,10 +148,11 @@ struct wnp_player {
 };
 
 struct wnp_events {
-  void (*on_player_added)(struct wnp_player* player);
-  void (*on_player_updated)(struct wnp_player* player);
-  void (*on_player_removed)(struct wnp_player* player);        // player is freed right after
-  void (*on_active_player_changed)(struct wnp_player* player); // player can be NULL if no active player is found
+  void (*on_player_added)(struct wnp_player* player, void* data);
+  void (*on_player_updated)(struct wnp_player* player, void* data);
+  void (*on_player_removed)(struct wnp_player* player, void* data);        // player is freed right after
+  void (*on_active_player_changed)(struct wnp_player* player, void* data); // player can be NULL if no active player is found
+  void* data;                                                              // additional data to be passed to callbacks
 };
 
 /**

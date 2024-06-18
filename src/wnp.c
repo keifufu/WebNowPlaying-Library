@@ -305,13 +305,13 @@ void wnp_recalculate_active_player()
   if (active_player == NULL || active_player->id == -1) {
     g_wnp_active_player_id = -1;
     if (g_wnp_events.on_active_player_changed != NULL) {
-      g_wnp_events.on_active_player_changed(NULL);
+      g_wnp_events.on_active_player_changed(NULL, g_wnp_events.data);
     }
   } else {
     if (g_wnp_active_player_id != active_player->id) {
       g_wnp_active_player_id = active_player->id;
       if (g_wnp_events.on_active_player_changed != NULL) {
-        g_wnp_events.on_active_player_changed(active_player);
+        g_wnp_events.on_active_player_changed(active_player, g_wnp_events.data);
       }
     }
   }
@@ -638,7 +638,7 @@ void wnp_ws_on_close(cws_client_t* client)
         ((struct wnp_player_data*)g_wnp_players[i]._data)->conn_data->client == client) {
       if (g_wnp_events.on_player_removed != NULL) {
         thread_mutex_unlock(&g_wnp_players_mutex);
-        g_wnp_events.on_player_removed(&g_wnp_players[i]);
+        g_wnp_events.on_player_removed(&g_wnp_players[i], g_wnp_events.data);
         thread_mutex_lock(&g_wnp_players_mutex);
       }
       thread_mutex_unlock(&g_wnp_players_mutex);
@@ -772,7 +772,7 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
 
     wnp_parse_player_text(player, player_text);
     if (g_wnp_events.on_player_added != NULL) {
-      g_wnp_events.on_player_added(player);
+      g_wnp_events.on_player_added(player, g_wnp_events.data);
     }
     break;
   }
@@ -791,7 +791,7 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
         wnp_parse_player_text(&g_wnp_players[i], player_text);
         if (g_wnp_events.on_player_updated != NULL) {
           thread_mutex_unlock(&g_wnp_players_mutex);
-          g_wnp_events.on_player_updated(&g_wnp_players[i]);
+          g_wnp_events.on_player_updated(&g_wnp_players[i], g_wnp_events.data);
           thread_mutex_lock(&g_wnp_players_mutex);
         }
       }
@@ -807,7 +807,7 @@ void wnp_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t
       if (conn_data != NULL && conn_data->port_id == id && conn_data->client == client) {
         thread_mutex_unlock(&g_wnp_players_mutex);
         if (g_wnp_events.on_player_removed != NULL) {
-          g_wnp_events.on_player_removed(&g_wnp_players[i]);
+          g_wnp_events.on_player_removed(&g_wnp_players[i], g_wnp_events.data);
         }
         wnp_free_player(&g_wnp_players[i]);
         thread_mutex_lock(&g_wnp_players_mutex);
@@ -860,7 +860,7 @@ void wnp_init_globals(bool start)
 
   g_wnp_use_dp = wnp_read_use_dp();
   strncpy(g_wnp_adapter_version, "0.0.0", 5);
-  // memset not to initialize but to wipe the array
+  // memset not to initialize but to wipe the struct
   memset(&g_wnp_events, 0, sizeof(g_wnp_events));
 
   if (start) {
@@ -981,7 +981,7 @@ int wnp_stop()
     for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
       if (g_wnp_players[i].id != -1) {
         thread_mutex_unlock(&g_wnp_players_mutex);
-        g_wnp_events.on_player_removed(&g_wnp_players[i]);
+        g_wnp_events.on_player_removed(&g_wnp_players[i], g_wnp_events.data);
         thread_mutex_lock(&g_wnp_players_mutex);
       }
     }
