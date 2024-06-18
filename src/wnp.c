@@ -546,6 +546,7 @@ int wnp_execute_event(struct wnp_player* player, enum wnp_event event, int data)
   }
 
   int event_id = wnp_get_event_id();
+  bool optimistic = false;
 
 // On windows, if a player is a desktop player, execute the event in dp_windows.cpp
 // it handles optimistic updates itself.
@@ -554,6 +555,7 @@ int wnp_execute_event(struct wnp_player* player, enum wnp_event event, int data)
     switch (event) {
     case TRY_SET_STATE:
       wnp_dp_try_set_state(player, event_id, data);
+      optimistic = true;
       break;
     case TRY_SKIP_PREVIOUS:
       wnp_dp_try_skip_previous(player, event_id);
@@ -563,21 +565,26 @@ int wnp_execute_event(struct wnp_player* player, enum wnp_event event, int data)
       break;
     case TRY_SET_POSITION:
       wnp_dp_try_set_position(player, event_id, data);
+      optimistic = true;
       break;
     case TRY_SET_VOLUME:
       wnp_dp_try_set_volume(player, event_id, data);
+      optimistic = true;
       break;
     case TRY_SET_RATING:
       wnp_dp_try_set_rating(player, event_id, data);
+      optimistic = true;
       break;
     case TRY_SET_REPEAT:
       wnp_dp_try_set_repeat(player, event_id, data);
+      optimistic = true;
       break;
     case TRY_SET_SHUFFLE:
       wnp_dp_try_set_shuffle(player, event_id, data);
+      optimistic = true;
       break;
     }
-    return event_id;
+    goto on_player_updated;
   }
 #endif
 
@@ -586,24 +593,30 @@ int wnp_execute_event(struct wnp_player* player, enum wnp_event event, int data)
   switch (event) {
   case TRY_SET_STATE:
     player->state = data;
+    optimistic = true;
     break;
   case TRY_SKIP_PREVIOUS:
   case TRY_SKIP_NEXT:
     break;
   case TRY_SET_POSITION:
     player->position = data;
+    optimistic = true;
     break;
   case TRY_SET_VOLUME:
     player->volume = data;
+    optimistic = true;
     break;
   case TRY_SET_RATING:
     player->rating = data;
+    optimistic = true;
     break;
   case TRY_SET_REPEAT:
     player->repeat = data;
+    optimistic = true;
     break;
   case TRY_SET_SHUFFLE:
     player->shuffle = data;
+    optimistic = true;
     break;
   }
   wnp_unlock(player);
@@ -614,6 +627,14 @@ int wnp_execute_event(struct wnp_player* player, enum wnp_event event, int data)
     snprintf(msg_buffer, WNP_STR_LEN - 1, "%d %d %d %d", conn_data->port_id, event_id, event, data);
     cws_send(conn_data->client, msg_buffer, strlen(msg_buffer), CWS_TYPE_TEXT);
   }
+
+on_player_updated:
+  if (optimistic) {
+    if (g_wnp_events.on_player_updated != NULL) {
+      g_wnp_events.on_player_updated(player, g_wnp_events.data);
+    }
+  }
+
   return event_id;
 }
 
