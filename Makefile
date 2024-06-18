@@ -1,7 +1,7 @@
 # There is no linux32 build since who even uses 32bit on linux
 CLEAN = rm -rf build
 MKDIR = mkdir -p build/obj
-CFLAGS = -Wall -Isrc -Wno-unknown-pragmas -Wno-int-to-void-pointer-cast
+CFLAGS = -Wall -Isrc -Wno-unknown-pragmas -Wno-int-to-void-pointer-cast -Wno-unused-label
 CFLAGS += -O2
 # CFLAGS += -g
 
