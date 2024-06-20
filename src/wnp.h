@@ -171,7 +171,6 @@ struct wnp_events {
  *  1 - Already started
  *  2 - Failed to start socket
  *  3 - Invalid adapter version
- *  4 - Failed to allocate memory for wnp_events
  */
 int wnp_start(int port, const char* adapter_version, struct wnp_events* events);
 
