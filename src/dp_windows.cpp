@@ -135,6 +135,28 @@ struct wnp_player* wnp_dp_get_player_from_session(MediaSession session)
   return NULL;
 }
 
+// This is used in wnp_dp_on_sessions_changed.
+// When players are added or removed, the sessions have new pointers,
+// so comparing by pointer does not work. We compare by appid here
+// and also replace dp_data->session with the new one.
+struct wnp_player* wnp_dp_get_player_from_session2(MediaSession session)
+{
+  char l_appid[WNP_STR_LEN];
+  wnp_dp_own_hstring(session.SourceAppUserModelId(), 1, l_appid);
+  thread_mutex_lock(&g_wnp_players_mutex);
+  for (int i = 0; i < WNP_MAX_PLAYERS; i++) {
+    struct wnp_dp_data* dp_data = wnp_get_dp_data(&g_wnp_players[i]);
+    if (dp_data != NULL && strcmp(l_appid, dp_data->l_appid) == 0) {
+      dp_data->session = session;
+      struct wnp_player* player = &g_wnp_players[i];
+      thread_mutex_unlock(&g_wnp_players_mutex);
+      return player;
+    }
+  }
+  thread_mutex_unlock(&g_wnp_players_mutex);
+  return NULL;
+}
+
 long long wnp_dp_get_timestamp()
 {
   return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::utc_clock::now().time_since_epoch()).count();
@@ -385,7 +407,7 @@ void wnp_dp_on_sessions_changed(MediaSessionManager manager)
 
     if (!wnp_dp_is_appid_blocked(l_appid)) {
       // If we already track the player, unmark should_remove and continue.
-      struct wnp_player* existing_player = wnp_dp_get_player_from_session(session);
+      struct wnp_player* existing_player = wnp_dp_get_player_from_session2(session);
       if (existing_player != NULL) {
         struct wnp_dp_data* dp_data = wnp_get_dp_data(existing_player);
         if (dp_data != NULL) {
