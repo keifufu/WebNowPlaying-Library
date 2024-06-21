@@ -168,9 +168,13 @@ void wnp_dp_get_player_name(MediaSession session, char name[WNP_STR_LEN])
   wnp_dp_own_hstring(session.SourceAppUserModelId(), 1, l_appid);
 
   if (strstr(l_appid, "spotify") != NULL) {
-    wnp_assign_str(name, (char*)"Spotify Desktop");
+    wnp_assign_str(name, (char*)"Spotify");
   } else {
     wnp_dp_own_hstring(session.SourceAppUserModelId(), 0, name);
+    char* exe_position = strstr(name, ".exe");
+    if (exe_position != NULL) {
+      *exe_position = '\0';
+    }
   }
 }
 
