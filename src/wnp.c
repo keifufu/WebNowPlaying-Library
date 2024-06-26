@@ -1104,7 +1104,9 @@ int wnp_get_all_players(struct wnp_player* players[WNP_MAX_PLAYERS])
   thread_mutex_lock(&g_wnp_players_mutex);
   for (int i = 0; i < WNP_MAX_PLAYERS; i++) {
     if (g_wnp_players[i].id != -1) {
-      players[pi] = &g_wnp_players[i];
+      if (players != NULL) {
+        players[pi] = &g_wnp_players[i];
+      }
       pi++;
     }
   }

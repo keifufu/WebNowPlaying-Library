@@ -224,6 +224,9 @@ struct wnp_player* wnp_get_active_player(bool always_return_player);
 
 /**
  * Gets all players and returns the amount of them.
+ *
+ * If `NULL` is passed as argument, only the number of players is returned.
+ *
  * Example:
  * ```
  *   struct wnp_player* players[WNP_MAX_PLAYERS];
