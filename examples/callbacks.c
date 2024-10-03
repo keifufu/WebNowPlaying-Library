@@ -2,59 +2,44 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <unistd.h>
-#endif
-
-void sleep_ms(int ms)
-{
-#ifdef _WIN32
-  Sleep(ms);
-#else
-  usleep(ms * 1000);
-#endif
-}
-
-void on_player_added(struct wnp_player* player, void* data)
-{
-  wnp_lock(player);
+void on_player_added(wnp_player_t* player, void* callback_data) {
   printf("Added player: %s\n", player->name);
-  wnp_unlock(player);
 }
 
-void on_player_updated(struct wnp_player* player, void* data)
-{
-  wnp_lock(player);
+void on_player_updated(wnp_player_t* player, void* callback_data) {
   printf("Updated player: %s\n", player->name);
-  wnp_unlock(player);
 }
 
-void on_player_removed(struct wnp_player* player, void* data)
-{
-  wnp_lock(player);
+void on_player_removed(wnp_player_t* player, void* callback_data) {
   printf("Removed player: %s\n", player->name);
-  wnp_unlock(player);
 }
 
-int main(void)
-{
-  struct wnp_events events;
-  events.on_player_added = &on_player_added;
-  events.on_player_updated = &on_player_updated;
-  events.on_player_removed = &on_player_removed;
-  events.on_active_player_changed = NULL; // set NULL if no handler
-  events.data = NULL;                     // additional data to be passed to callbacks
+void on_active_player_changed(wnp_player_t* player, void* callback_data) {
+  if (player == NULL) {
+    printf("Active player changed to: None\n");
+  } else {
+    printf("Active player changed to: %s\n", player->name);
+  }
+}
 
-  // port, adapter version
-  if (wnp_start(1234, "1.0.0", &events) != 0) {
-    perror("Failed to start wnp");
-    return EXIT_FAILURE;
+int main() {
+  wnp_args_t args = {
+      .web_port = 1234,
+      .adapter_version = "1.0.0",
+      .on_player_added = &on_player_added,
+      .on_player_updated = &on_player_updated,
+      .on_player_removed = &on_player_removed,
+      .on_active_player_changed = &on_active_player_changed,
+      .callback_data = NULL,
+  };
+
+  if (wnp_init(&args) != WNP_INIT_SUCCESS) {
+    fprintf(stderr, "Failed to initialize WebNowPlaying");
+    exit(EXIT_FAILURE);
   }
 
-  sleep_ms(60000);
+  getchar();
 
-  wnp_stop();
+  wnp_uninit();
   return EXIT_SUCCESS;
 }

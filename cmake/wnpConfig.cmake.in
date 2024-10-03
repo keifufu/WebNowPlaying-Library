@@ -1,0 +1,9 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(GIO)
+find_dependency(GLIB)
+find_dependency(GOBJECT)
+
+include("${CMAKE_CURRENT_LIST_DIR}/wnpTargets.cmake")

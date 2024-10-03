@@ -11,24 +11,18 @@
       "aarch64-linux"
       "aarch64-darwin"
     ];
-    perSystem = { pkgs, system, ...}: {
+    perSystem = { pkgs, system, lib, ...}: {
       packages.default = pkgs.stdenv.mkDerivation {
         pname = "libwnp";
-        version = builtins.readFile ./VERSION;
+        version = "3.0.0";
         src = ./.;
-        buildInputs = with pkgs; [ clang makeWrapper ];
-        buildPhase = ''
-          make linux64
-        '';
-        installPhase = ''
-          mkdir -p $out/lib $out/include
-          cp build/libwnp_linux_amd64.a $out/lib/libwnp.a
-          cp src/wnp.h $out/include/
-        '';
+        nativeBuildInputs = [ pkgs.cmake ]
+          ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.pkg-config ];
+        buildInputs = lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.glib ];
       };
       devShells.default = pkgs.mkShell {
         shellHook = "exec $SHELL";
-        buildInputs = with pkgs; [ clang valgrind gnumake ];
+        buildInputs = with pkgs; [ clang cmake glib pkg-config ];
       };
     };
   };

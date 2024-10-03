@@ -1,12 +1,4 @@
+.vscode
+result
 build
 dist
-result
-tests/cws/*
-!tests/cws/*/
-!tests/cws/*.*
-tests/cws/reports
-tests/libwnp/*
-!tests/libwnp/*.*
-.vscode
-.vs
-vc140.pdb
