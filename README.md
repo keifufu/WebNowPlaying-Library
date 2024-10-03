@@ -1,7 +1,3 @@
-# TODO: update readme
-
-# - clean up cmake files
-
 # WebNowPlaying-Library
 
 C library for [WebNowPlaying](https://github.com/keifufu/WebNowPlaying) adapters.
