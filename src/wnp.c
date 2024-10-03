@@ -700,14 +700,14 @@ void wnp_format_seconds(int seconds, bool pad_with_zeroes, char out_str[13]) {
   }
 }
 
-void wnp_utf8_to_utf16(unsigned char* input, int input_len, char16_t* output, int output_len) {
+void wnp_utf8_to_utf16(unsigned char* input, int input_len, uint16_t* output, int output_len) {
   unsigned char* utf8_currentCodeUnit = input;
-  char16_t* utf16_currentCodeUnit = output;
+  uint16_t* utf16_currentCodeUnit = output;
   int utf8_str_iterator = 0;
   int utf16_str_iterator = 0;
   while (*utf8_currentCodeUnit && (utf16_str_iterator < output_len || utf8_str_iterator < input_len)) {
     if (*utf8_currentCodeUnit < 0x80) {
-      *utf16_currentCodeUnit = (char16_t)(*utf8_currentCodeUnit);
+      *utf16_currentCodeUnit = (uint16_t)(*utf8_currentCodeUnit);
       utf16_currentCodeUnit++;
       utf16_str_iterator++;
       utf8_currentCodeUnit++;
@@ -716,50 +716,50 @@ void wnp_utf8_to_utf16(unsigned char* input, int input_len, char16_t* output, in
       utf8_currentCodeUnit++;
       utf8_str_iterator++;
     } else if (*utf8_currentCodeUnit < 0xE0) {
-      char16_t highShort = (char16_t)((*utf8_currentCodeUnit) & 0x1F);
+      uint16_t highShort = (uint16_t)((*utf8_currentCodeUnit) & 0x1F);
       utf8_currentCodeUnit++;
-      char16_t lowShort = (char16_t)((*utf8_currentCodeUnit) & 0x3F);
+      uint16_t lowShort = (uint16_t)((*utf8_currentCodeUnit) & 0x3F);
       utf8_currentCodeUnit++;
       int unicode = (highShort << 6) | lowShort;
       if ((0 <= unicode && unicode <= 0xD7FF) || (0xE000 <= unicode && unicode <= 0xFFFF)) {
-        *utf16_currentCodeUnit = (char16_t)unicode;
+        *utf16_currentCodeUnit = (uint16_t)unicode;
         utf16_currentCodeUnit++;
         utf16_str_iterator++;
       }
       utf8_str_iterator += 2;
     } else if (*utf8_currentCodeUnit < 0xF0) {
-      char16_t fourthChar = (char16_t)((*utf8_currentCodeUnit) & 0xF);
+      uint16_t fourthChar = (uint16_t)((*utf8_currentCodeUnit) & 0xF);
       utf8_currentCodeUnit++;
-      char16_t thirdChar = (char16_t)((*utf8_currentCodeUnit) & 0x3C) >> 2;
-      char16_t secondCharHigh = (char16_t)((*utf8_currentCodeUnit) & 0x3);
+      uint16_t thirdChar = (uint16_t)((*utf8_currentCodeUnit) & 0x3C) >> 2;
+      uint16_t secondCharHigh = (uint16_t)((*utf8_currentCodeUnit) & 0x3);
       utf8_currentCodeUnit++;
-      char16_t secondCharLow = (char16_t)((*utf8_currentCodeUnit) & 0x30) >> 4;
-      char16_t firstChar = (char16_t)((*utf8_currentCodeUnit) & 0xF);
+      uint16_t secondCharLow = (uint16_t)((*utf8_currentCodeUnit) & 0x30) >> 4;
+      uint16_t firstChar = (uint16_t)((*utf8_currentCodeUnit) & 0xF);
       utf8_currentCodeUnit++;
       int unicode = (fourthChar << 12) | (thirdChar << 8) | (secondCharHigh << 6) | (secondCharLow << 4) | firstChar;
       if ((0 <= unicode && unicode <= 0xD7FF) || (0xE000 <= unicode && unicode <= 0xFFFF)) {
-        *utf16_currentCodeUnit = (char16_t)unicode;
+        *utf16_currentCodeUnit = (uint16_t)unicode;
         utf16_currentCodeUnit++;
         utf16_str_iterator++;
       }
       utf8_str_iterator += 3;
     } else if (*utf8_currentCodeUnit < 0xF8) {
-      char16_t sixthChar = (char16_t)((*utf8_currentCodeUnit) & 0x4) >> 2;
-      char16_t fifthCharHigh = (char16_t)((*utf8_currentCodeUnit) & 0x3);
+      uint16_t sixthChar = (uint16_t)((*utf8_currentCodeUnit) & 0x4) >> 2;
+      uint16_t fifthCharHigh = (uint16_t)((*utf8_currentCodeUnit) & 0x3);
       utf8_currentCodeUnit++;
-      char16_t fifthCharLow = (char16_t)((*utf8_currentCodeUnit) & 0x30) >> 4;
-      char16_t fourthChar = (char16_t)((*utf8_currentCodeUnit) & 0xF);
+      uint16_t fifthCharLow = (uint16_t)((*utf8_currentCodeUnit) & 0x30) >> 4;
+      uint16_t fourthChar = (uint16_t)((*utf8_currentCodeUnit) & 0xF);
       utf8_currentCodeUnit++;
-      char16_t thirdChar = (char16_t)((*utf8_currentCodeUnit) & 0x3C) >> 2;
-      char16_t secondCharHigh = (char16_t)((*utf8_currentCodeUnit) & 0x3);
+      uint16_t thirdChar = (uint16_t)((*utf8_currentCodeUnit) & 0x3C) >> 2;
+      uint16_t secondCharHigh = (uint16_t)((*utf8_currentCodeUnit) & 0x3);
       utf8_currentCodeUnit++;
-      char16_t secondCharLow = (char16_t)((*utf8_currentCodeUnit) & 0x30) >> 4;
-      char16_t firstChar = (char16_t)((*utf8_currentCodeUnit) & 0xF);
+      uint16_t secondCharLow = (uint16_t)((*utf8_currentCodeUnit) & 0x30) >> 4;
+      uint16_t firstChar = (uint16_t)((*utf8_currentCodeUnit) & 0xF);
       utf8_currentCodeUnit++;
       int unicode = (sixthChar << 4) | (fifthCharHigh << 2) | fifthCharLow | (fourthChar << 12) | (thirdChar << 8) | (secondCharHigh << 6) |
                     (secondCharLow << 4) | firstChar;
-      char16_t highSurrogate = (unicode - 0x10000) / 0x400 + 0xD800;
-      char16_t lowSurrogate = (unicode - 0x10000) % 0x400 + 0xDC00;
+      uint16_t highSurrogate = (unicode - 0x10000) / 0x400 + 0xD800;
+      uint16_t lowSurrogate = (unicode - 0x10000) % 0x400 + 0xDC00;
       *utf16_currentCodeUnit = lowSurrogate;
       utf16_currentCodeUnit++;
       utf16_str_iterator++;

@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <uchar.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -241,7 +240,7 @@ void wnp_format_seconds(int seconds, bool pad_with_zeroes, char str_out[13]);
 /**
  * Converts UTF-8 to UTF-16
  */
-void wnp_utf8_to_utf16(unsigned char* input, int input_len, char16_t* output, int output_len);
+void wnp_utf8_to_utf16(unsigned char* input, int input_len, uint16_t* output, int output_len);
 
 typedef enum {
   WNP_EVENT_PENDING = 0,
