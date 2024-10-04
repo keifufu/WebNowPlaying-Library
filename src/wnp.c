@@ -63,7 +63,8 @@ wnp_player_t WNP_DEFAULT_PLAYER = {
  * ==============================
  */
 
-static void _wnp_callback(int type, int player_id) {
+static void _wnp_callback(int type, int player_id)
+{
   // Exception for ACTIVE_PLAYER_CHANGED, where the player can be NULL.
   if (type == WNP_CALLBACK_ACTIVE_PLAYER_CHANGED && player_id == -1) {
     if (_wnp_state.args.on_active_player_changed != NULL) {
@@ -105,7 +106,8 @@ static void _wnp_callback(int type, int player_id) {
   }
 }
 
-static void _wnp_recalculate_active_player() {
+static void _wnp_recalculate_active_player()
+{
   int active_player_id = -1;
   uint64_t max_active_at = 0;
   bool found_active = true;
@@ -137,7 +139,8 @@ static void _wnp_recalculate_active_player() {
   }
 }
 
-static bool _wnp_is_adapter_version_valid(const char* adapter_version) {
+static bool _wnp_is_adapter_version_valid(const char* adapter_version)
+{
   if (adapter_version == NULL) return false;
 
   const char* p = adapter_version;
@@ -166,7 +169,8 @@ static bool _wnp_is_adapter_version_valid(const char* adapter_version) {
   return (dots == 2 && nums == 3 && other == 0);
 }
 
-static int _wnp_get_all_players_lockable(wnp_player_t players_out[WNP_MAX_PLAYERS], bool skip_browsers, bool lock) {
+static int _wnp_get_all_players_lockable(wnp_player_t players_out[WNP_MAX_PLAYERS], bool skip_browsers, bool lock)
+{
   int count = 0;
 
   if (lock) thread_mutex_lock(&_wnp_state.players_lock);
@@ -184,7 +188,8 @@ static int _wnp_get_all_players_lockable(wnp_player_t players_out[WNP_MAX_PLAYER
   return count;
 }
 
-void _wnp_free_platform_data(wnp_player_t* player) {
+void _wnp_free_platform_data(wnp_player_t* player)
+{
   if (player->_platform_data == NULL) {
     return;
   }
@@ -227,17 +232,20 @@ void _wnp_free_platform_data(wnp_player_t* player) {
  * =============================
  */
 
-void __wnp_get_args(wnp_args_t* args_out) {
+void __wnp_get_args(wnp_args_t* args_out)
+{
   *args_out = _wnp_state.args;
 }
 
-int __wnp_start_update_cycle(wnp_player_t players_out[WNP_MAX_PLAYERS]) {
+int __wnp_start_update_cycle(wnp_player_t players_out[WNP_MAX_PLAYERS])
+{
   thread_mutex_lock(&_wnp_state.players_lock);
   _wnp_state.update_cycle = true;
   return _wnp_get_all_players_lockable(players_out, false, false);
 }
 
-int __wnp_add_player(wnp_player_t* player) {
+int __wnp_add_player(wnp_player_t* player)
+{
   if (!_wnp_state.update_cycle) return -1;
 
   int player_id = -1;
@@ -267,7 +275,8 @@ int __wnp_add_player(wnp_player_t* player) {
   return player_id;
 }
 
-void __wnp_update_player(wnp_player_t* player) {
+void __wnp_update_player(wnp_player_t* player)
+{
   if (!_wnp_state.update_cycle) return;
 
   if (player->id < 0 || player->id >= WNP_MAX_PLAYERS || _wnp_state.players[player->id].id != player->id) {
@@ -294,7 +303,8 @@ void __wnp_update_player(wnp_player_t* player) {
   }
 }
 
-void __wnp_remove_player(int player_id) {
+void __wnp_remove_player(int player_id)
+{
   if (!_wnp_state.update_cycle) return;
 
   if (player_id < 0 || player_id >= WNP_MAX_PLAYERS) {
@@ -320,7 +330,8 @@ void __wnp_remove_player(int player_id) {
   _wnp_state.players[player_id] = WNP_DEFAULT_PLAYER;
 }
 
-void __wnp_end_update_cycle() {
+void __wnp_end_update_cycle()
+{
   _wnp_state.update_cycle = false;
   thread_mutex_unlock(&_wnp_state.players_lock);
 
@@ -353,7 +364,8 @@ void __wnp_end_update_cycle() {
   _wnp_recalculate_active_player();
 }
 
-bool __wnp_get_cover_path(int player_id, char cover_path_out[WNP_STR_LEN]) {
+bool __wnp_get_cover_path(int player_id, char cover_path_out[WNP_STR_LEN])
+{
   char file_name[WNP_STR_LEN] = {0};
   snprintf(file_name, WNP_STR_LEN, "libwnp-cover-%d.png", player_id);
 
@@ -383,7 +395,8 @@ bool __wnp_get_cover_path(int player_id, char cover_path_out[WNP_STR_LEN]) {
   return true;
 }
 
-bool __wnp_write_cover(int player_id, void* data, uint64_t size) {
+bool __wnp_write_cover(int player_id, void* data, uint64_t size)
+{
   char file_path[WNP_STR_LEN] = {0};
   if (!__wnp_get_cover_path(player_id, file_path)) {
     return false;
@@ -402,7 +415,8 @@ bool __wnp_write_cover(int player_id, void* data, uint64_t size) {
   return true;
 }
 
-void __wnp_set_event_result(int event_id, wnp_event_result_t result) {
+void __wnp_set_event_result(int event_id, wnp_event_result_t result)
+{
   thread_mutex_lock(&_wnp_state.event_results_lock);
   _wnp_state.event_results[event_id] = result;
   thread_mutex_unlock(&_wnp_state.event_results_lock);
@@ -414,20 +428,23 @@ void __wnp_set_event_result(int event_id, wnp_event_result_t result) {
  * ============================
  */
 
-static int _wnp_get_next_event_id() {
+static int _wnp_get_next_event_id()
+{
   static int event_id = 0;
   event_id = (event_id + 1) % WNP_MAX_EVENT_RESULTS;
   __wnp_set_event_result(event_id, WNP_EVENT_PENDING);
   return event_id;
 }
 
-static int _wnp_failed_event() {
+static int _wnp_failed_event()
+{
   int event_id = _wnp_get_next_event_id();
   __wnp_set_event_result(event_id, WNP_EVENT_FAILED);
   return event_id;
 }
 
-static int _wnp_execute_event(int player_id, wnp_event_t event, int data) {
+static int _wnp_execute_event(int player_id, wnp_event_t event, int data)
+{
   if (player_id < 0 || player_id >= WNP_MAX_PLAYERS) {
     return _wnp_failed_event();
   }
@@ -514,7 +531,8 @@ static int _wnp_execute_event(int player_id, wnp_event_t event, int data) {
  * ===============================
  */
 
-wnp_init_ret_t wnp_init(wnp_args_t* args) {
+wnp_init_ret_t wnp_init(wnp_args_t* args)
+{
   // clang-format off
 #define WNP_PLATFORM_INIT(platform) \
   do { \
@@ -583,7 +601,8 @@ wnp_init_ret_t wnp_init(wnp_args_t* args) {
   return retval;
 }
 
-void wnp_uninit() {
+void wnp_uninit()
+{
   if (!_wnp_state.is_initialized) {
     return;
   }
@@ -624,7 +643,8 @@ void wnp_uninit() {
 #endif /* WNP_BUILD_PLATFORM_WINDOWS */
 }
 
-bool wnp_is_initialized() {
+bool wnp_is_initialized()
+{
   return _wnp_state.is_initialized;
 }
 
@@ -634,7 +654,8 @@ bool wnp_is_initialized() {
  * ===========================
  */
 
-bool wnp_get_player(int player_id, wnp_player_t* player_out) {
+bool wnp_get_player(int player_id, wnp_player_t* player_out)
+{
   if (player_id < 0 || player_id >= WNP_MAX_PLAYERS) {
     return false;
   }
@@ -651,7 +672,8 @@ bool wnp_get_player(int player_id, wnp_player_t* player_out) {
   return true;
 }
 
-bool wnp_get_active_player(wnp_player_t* player_out) {
+bool wnp_get_active_player(wnp_player_t* player_out)
+{
   if (_wnp_state.active_player_id == -1) {
     return false;
   }
@@ -660,7 +682,8 @@ bool wnp_get_active_player(wnp_player_t* player_out) {
   return true;
 }
 
-int wnp_get_all_players(wnp_player_t players_out[WNP_MAX_PLAYERS]) {
+int wnp_get_all_players(wnp_player_t players_out[WNP_MAX_PLAYERS])
+{
   return _wnp_get_all_players_lockable(players_out, true, true);
 }
 
@@ -670,16 +693,19 @@ int wnp_get_all_players(wnp_player_t players_out[WNP_MAX_PLAYERS]) {
  * ============================
  */
 
-float wnp_get_position_percent(wnp_player_t* player) {
+float wnp_get_position_percent(wnp_player_t* player)
+{
   if (player->duration == 0) return 100.0;
   return ((float)(player->position) / player->duration) * 100.0;
 }
 
-int wnp_get_remaining_seconds(wnp_player_t* player) {
+int wnp_get_remaining_seconds(wnp_player_t* player)
+{
   return player->duration - player->position;
 }
 
-void wnp_format_seconds(int seconds, bool pad_with_zeroes, char out_str[13]) {
+void wnp_format_seconds(int seconds, bool pad_with_zeroes, char out_str[13])
+{
   int hours = seconds / 3600;
   int remainder = seconds % 3600;
   int minutes = remainder / 60;
@@ -700,7 +726,8 @@ void wnp_format_seconds(int seconds, bool pad_with_zeroes, char out_str[13]) {
   }
 }
 
-void wnp_utf8_to_utf16(unsigned char* input, int input_len, uint16_t* output, int output_len) {
+void wnp_utf8_to_utf16(unsigned char* input, int input_len, uint16_t* output, int output_len)
+{
   unsigned char* utf8_currentCodeUnit = input;
   uint16_t* utf16_currentCodeUnit = output;
   int utf8_str_iterator = 0;
@@ -787,7 +814,8 @@ void wnp_utf8_to_utf16(unsigned char* input, int input_len, uint16_t* output, in
  * =================================
  */
 
-wnp_event_result_t wnp_get_event_result(int event_id) {
+wnp_event_result_t wnp_get_event_result(int event_id)
+{
   if (event_id < 0 || event_id >= WNP_MAX_EVENT_RESULTS) {
     return WNP_EVENT_FAILED;
   }
@@ -799,7 +827,8 @@ wnp_event_result_t wnp_get_event_result(int event_id) {
   return event_result;
 }
 
-wnp_event_result_t wnp_wait_for_event_result(int event_id) {
+wnp_event_result_t wnp_wait_for_event_result(int event_id)
+{
   if (event_id < 0 || event_id >= WNP_MAX_EVENT_RESULTS) {
     return WNP_EVENT_FAILED;
   }
@@ -828,37 +857,45 @@ wnp_event_result_t wnp_wait_for_event_result(int event_id) {
  * ===============================
  */
 
-int wnp_try_set_state(wnp_player_t* player, wnp_state_t state) {
+int wnp_try_set_state(wnp_player_t* player, wnp_state_t state)
+{
   return _wnp_execute_event(player->id, WNP_TRY_SET_STATE, state);
 }
 
-int wnp_try_skip_previous(wnp_player_t* player) {
+int wnp_try_skip_previous(wnp_player_t* player)
+{
   return _wnp_execute_event(player->id, WNP_TRY_SKIP_PREVIOUS, 0);
 }
 
-int wnp_try_skip_next(wnp_player_t* player) {
+int wnp_try_skip_next(wnp_player_t* player)
+{
   return _wnp_execute_event(player->id, WNP_TRY_SKIP_NEXT, 0);
 }
 
-int wnp_try_set_position(wnp_player_t* player, unsigned int seconds) {
+int wnp_try_set_position(wnp_player_t* player, unsigned int seconds)
+{
   if (seconds > player->duration) seconds = player->duration;
   return _wnp_execute_event(player->id, WNP_TRY_SET_POSITION, seconds);
 }
 
-int wnp_try_set_volume(wnp_player_t* player, unsigned int volume) {
+int wnp_try_set_volume(wnp_player_t* player, unsigned int volume)
+{
   if (volume > 100) volume = 100;
   return _wnp_execute_event(player->id, WNP_TRY_SET_VOLUME, volume);
 }
 
-int wnp_try_set_rating(wnp_player_t* player, unsigned int rating) {
+int wnp_try_set_rating(wnp_player_t* player, unsigned int rating)
+{
   return _wnp_execute_event(player->id, WNP_TRY_SET_RATING, rating);
 }
 
-int wnp_try_set_repeat(wnp_player_t* player, wnp_repeat_t repeat) {
+int wnp_try_set_repeat(wnp_player_t* player, wnp_repeat_t repeat)
+{
   return _wnp_execute_event(player->id, WNP_TRY_SET_REPEAT, repeat);
 }
 
-int wnp_try_set_shuffle(wnp_player_t* player, bool shuffle) {
+int wnp_try_set_shuffle(wnp_player_t* player, bool shuffle)
+{
   return _wnp_execute_event(player->id, WNP_TRY_SET_SHUFFLE, shuffle);
 }
 
@@ -868,35 +905,42 @@ int wnp_try_set_shuffle(wnp_player_t* player, bool shuffle) {
  * ===============================
  */
 
-int wnp_try_play_pause(wnp_player_t* player) {
+int wnp_try_play_pause(wnp_player_t* player)
+{
   int is_paused = player->state == WNP_STATE_PAUSED || player->state == WNP_STATE_STOPPED;
   return wnp_try_set_state(player, is_paused ? WNP_STATE_PLAYING : WNP_STATE_PAUSED);
 }
 
-int wnp_try_revert(wnp_player_t* player, unsigned int seconds) {
+int wnp_try_revert(wnp_player_t* player, unsigned int seconds)
+{
   return wnp_try_set_position(player, player->position - seconds);
 }
 
-int wnp_try_forward(wnp_player_t* player, unsigned int seconds) {
+int wnp_try_forward(wnp_player_t* player, unsigned int seconds)
+{
   return wnp_try_set_position(player, player->position + seconds);
 }
 
-int wnp_try_set_position_percent(wnp_player_t* player, float percent) {
+int wnp_try_set_position_percent(wnp_player_t* player, float percent)
+{
   int seconds = (int)(percent / 100 * player->duration + 0.5);
   return wnp_try_set_position(player, seconds);
 }
 
-int wnp_try_revert_percent(wnp_player_t* player, float percent) {
+int wnp_try_revert_percent(wnp_player_t* player, float percent)
+{
   int seconds = (int)(percent / 100 * player->duration + 0.5);
   return wnp_try_set_position(player, player->position - seconds);
 }
 
-int wnp_try_forward_percent(wnp_player_t* player, float percent) {
+int wnp_try_forward_percent(wnp_player_t* player, float percent)
+{
   int seconds = (int)(percent / 100 * player->duration + 0.5);
   return wnp_try_set_position(player, player->position + seconds);
 }
 
-int wnp_try_toggle_repeat(wnp_player_t* player) {
+int wnp_try_toggle_repeat(wnp_player_t* player)
+{
   wnp_repeat_t next_repeat = player->repeat;
   int supports_none = player->available_repeat & WNP_REPEAT_NONE;
   int supports_all = player->available_repeat & WNP_REPEAT_ALL;

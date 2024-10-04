@@ -80,7 +80,8 @@ static cws_client_t g_clients[MAX_CLIENTS];
 static thread_atomic_int_t g_exit_flag;
 static cws_server_data_t g_server_data;
 
-static unsigned char* base64_encode(const unsigned char* input, size_t length) {
+static unsigned char* base64_encode(const unsigned char* input, size_t length)
+{
   static const char base64_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
   int output_length = 4 * ((length + 2) / 3);
@@ -112,7 +113,8 @@ static unsigned char* base64_encode(const unsigned char* input, size_t length) {
   return encoded_data;
 }
 
-static void close_fd(int fd) {
+static void close_fd(int fd)
+{
 #ifdef _WIN32
   shutdown(fd, SD_BOTH);
   closesocket(fd);
@@ -122,7 +124,8 @@ static void close_fd(int fd) {
 #endif
 }
 
-static ssize_t sendn_client(cws_client_t* client, const void* buf, size_t n, int flags) {
+static ssize_t sendn_client(cws_client_t* client, const void* buf, size_t n, int flags)
+{
   if (client == NULL || client->fd == -1) {
     return -1;
   }
@@ -143,7 +146,8 @@ static ssize_t sendn_client(cws_client_t* client, const void* buf, size_t n, int
   return bytes;
 }
 
-int cws_send(cws_client_t* client, const char* msg, uint64_t size, int type) {
+int cws_send(cws_client_t* client, const char* msg, uint64_t size, int type)
+{
   unsigned char frame[10];
   uint8_t data_start;
 
@@ -195,7 +199,8 @@ int cws_send(cws_client_t* client, const char* msg, uint64_t size, int type) {
   return output;
 }
 
-static int send_close_frame(cws_frame_t* frame, int code) {
+static int send_close_frame(cws_frame_t* frame, int code)
+{
   int cc;
   if (code != -1) {
     cc = code;
@@ -231,7 +236,8 @@ send:
   return 0;
 }
 
-static void close_client(cws_client_t* client) {
+static void close_client(cws_client_t* client)
+{
   if (client == NULL || client->fd == -1) {
     return;
   }
@@ -244,7 +250,8 @@ static void close_client(cws_client_t* client) {
   thread_mutex_unlock(&g_clients_mutex);
 }
 
-static int recv_next_byte(cws_frame_t* frame) {
+static int recv_next_byte(cws_frame_t* frame)
+{
   ssize_t n;
 
   if (frame->cur_pos == 0 || frame->cur_pos == frame->amt_read) {
@@ -259,7 +266,8 @@ static int recv_next_byte(cws_frame_t* frame) {
   return (frame->buf[frame->cur_pos++]);
 }
 
-static int recv_frame(cws_frame_t* frame, cws_frame_state_data_t* fsd) {
+static int recv_frame(cws_frame_t* frame, cws_frame_state_data_t* fsd)
+{
   uint64_t* frame_size;
   unsigned char* tmp;
   unsigned char* msg;
@@ -342,7 +350,8 @@ static int recv_frame(cws_frame_t* frame, cws_frame_state_data_t* fsd) {
   return 0;
 }
 
-int valid_utf8(uint8_t* s, size_t len, uint32_t state) {
+int valid_utf8(uint8_t* s, size_t len, uint32_t state)
+{
   // clang-format off
   static const uint8_t utf8d[] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 00..1f
@@ -375,7 +384,8 @@ int valid_utf8(uint8_t* s, size_t len, uint32_t state) {
   return state;
 }
 
-static int recv_next_frame(cws_frame_t* frame) {
+static int recv_next_frame(cws_frame_t* frame)
+{
   cws_frame_state_data_t fsd = {0};
   fsd.msg_data = NULL;
   fsd.msg_ctrl = frame->msg_ctrl;
@@ -500,7 +510,8 @@ static int recv_next_frame(cws_frame_t* frame) {
   return 0;
 }
 
-static void sha1(const uint8_t* data, size_t size, uint8_t* output) {
+static void sha1(const uint8_t* data, size_t size, uint8_t* output)
+{
 #define SHA1ROTATELEFT(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
   uint32_t W[80];
   uint32_t H[] = {0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0};
@@ -588,7 +599,8 @@ static void sha1(const uint8_t* data, size_t size, uint8_t* output) {
   }
 }
 
-static int handle_handshake(cws_frame_t* frame) {
+static int handle_handshake(cws_frame_t* frame)
+{
   ssize_t bytes_read;
   if ((bytes_read = recv(frame->client->fd, frame->buf, sizeof(frame->buf) - 1, 0)) < 0) {
     return -1;
@@ -655,7 +667,8 @@ static int handle_handshake(cws_frame_t* frame) {
   return 0;
 }
 
-static int client_thread(void* data) {
+static int client_thread(void* data)
+{
   cws_client_t* client = (cws_client_t*)data;
   cws_frame_t frame;
 
@@ -699,7 +712,8 @@ closed:
   return 0;
 }
 
-static int server_thread(void* data) {
+static int server_thread(void* data)
+{
   cws_server_data_t* server_data = (cws_server_data_t*)data;
 
   struct sockaddr_storage address;
@@ -738,7 +752,8 @@ static int server_thread(void* data) {
   return 0;
 }
 
-int cws_start(cws_server_t server) {
+int cws_start(cws_server_t server)
+{
   memset(&g_server_data, -1, sizeof(g_server_data));
   memcpy(&g_server_data.server, &server, sizeof(cws_server_t));
   memset(g_clients, -1, sizeof(g_clients));
@@ -783,7 +798,8 @@ int cws_start(cws_server_t server) {
   return 0;
 }
 
-int cws_stop() {
+int cws_stop()
+{
   for (int i = 0; i < MAX_CLIENTS; i++) {
     if (g_clients[i].fd != -1) {
       close_client(&g_clients[i]);

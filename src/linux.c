@@ -36,14 +36,16 @@ static _linux_state_t _linux_state = {0};
  * ==============================
  */
 
-static uint64_t _linux_timestamp() {
+static uint64_t _linux_timestamp()
+{
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
   uint64_t milliseconds = (ts.tv_sec * 1000) + (ts.tv_nsec / 1000000);
   return milliseconds;
 }
 
-static _linux_platform_data_t* _linux_get_platform_data(wnp_player_t* player) {
+static _linux_platform_data_t* _linux_get_platform_data(wnp_player_t* player)
+{
   if (player == NULL || player->platform != WNP_PLATFORM_LINUX) {
     return NULL;
   }
@@ -51,14 +53,16 @@ static _linux_platform_data_t* _linux_get_platform_data(wnp_player_t* player) {
   return (_linux_platform_data_t*)player->_platform_data;
 }
 
-static void _linux_assign_str(char dest[WNP_STR_LEN], const char* str) {
+static void _linux_assign_str(char dest[WNP_STR_LEN], const char* str)
+{
   if (str == NULL) return;
   size_t len = strlen(str);
   strncpy(dest, str, WNP_STR_LEN - 1);
   dest[len < WNP_STR_LEN ? len : WNP_STR_LEN - 1] = '\0';
 }
 
-static bool _linux_is_web_browser(const gchar* _player_name) {
+static bool _linux_is_web_browser(const gchar* _player_name)
+{
   char player_name[WNP_STR_LEN] = {0};
   _linux_assign_str(player_name, _player_name);
   for (char* p = player_name; *p; ++p) {
@@ -75,11 +79,13 @@ static bool _linux_is_web_browser(const gchar* _player_name) {
 
 static const char base64_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static inline bool is_base64(char c) {
+static inline bool is_base64(char c)
+{
   return isalnum(c) || c == '+' || c == '/';
 }
 
-static int base64_chars_find(char find) {
+static int base64_chars_find(char find)
+{
   for (size_t i = 0; i < 64; ++i) {
     if (base64_chars[i] == find) {
       return i;
@@ -89,7 +95,8 @@ static int base64_chars_find(char find) {
   return -1;
 }
 
-static size_t decode_base64(const char* string, void* data) {
+static size_t decode_base64(const char* string, void* data)
+{
   size_t size = 0;
   uint8_t* ptr = (uint8_t*)data;
   size_t len = strlen(string);
@@ -151,7 +158,8 @@ static size_t decode_base64(const char* string, void* data) {
   return size;
 }
 
-static size_t base64_decode_bytes(const char* string) {
+static size_t base64_decode_bytes(const char* string)
+{
   size_t size = 0;
   size_t len = strlen(string);
   size_t idx = 0;
@@ -173,7 +181,8 @@ static size_t base64_decode_bytes(const char* string) {
   return size;
 }
 
-static void _linux_parse_metadata(wnp_player_t* player, GVariant* metadata) {
+static void _linux_parse_metadata(wnp_player_t* player, GVariant* metadata)
+{
   GVariantIter iter;
   const gchar* key;
   GVariant* value;
@@ -265,7 +274,8 @@ static void _linux_parse_metadata(wnp_player_t* player, GVariant* metadata) {
   }
 }
 
-static void _linux_parse_properties(wnp_player_t* player, GVariant* properties) {
+static void _linux_parse_properties(wnp_player_t* player, GVariant* properties)
+{
   GVariantIter iter;
   const gchar* key;
   GVariant* value;
@@ -384,7 +394,8 @@ static void _linux_on_properties_changed(
   g_variant_unref(changed_properties);
 }
 
-static void _linux_player_added(GDBusConnection* connection, const gchar* player_name) {
+static void _linux_player_added(GDBusConnection* connection, const gchar* player_name)
+{
   wnp_player_t players[WNP_MAX_PLAYERS] = {0};
   int count = __wnp_start_update_cycle(players);
 
@@ -489,7 +500,8 @@ static void _linux_player_added(GDBusConnection* connection, const gchar* player
   __wnp_end_update_cycle();
 }
 
-static void _linux_player_removed(GDBusConnection* connection, const gchar* player_name) {
+static void _linux_player_removed(GDBusConnection* connection, const gchar* player_name)
+{
   wnp_player_t players[WNP_MAX_PLAYERS] = {0};
   int count = __wnp_start_update_cycle(players);
 
@@ -529,7 +541,8 @@ static void _linux_on_name_owner_changed(
   }
 }
 
-static void _linux_init_active_players(GDBusConnection* connection) {
+static void _linux_init_active_players(GDBusConnection* connection)
+{
   GError* error = NULL;
   GVariant* result;
   gchar** names;
@@ -567,7 +580,8 @@ static void _linux_init_active_players(GDBusConnection* connection) {
   g_variant_unref(result);
 }
 
-static int _wnp_loop_thread_func(void* user_data) {
+static int _wnp_loop_thread_func(void* user_data)
+{
   g_main_loop_run(_linux_state.loop);
   return 0;
 }
@@ -578,7 +592,8 @@ static int _wnp_loop_thread_func(void* user_data) {
  * =============================
  */
 
-wnp_init_ret_t __wnp_platform_linux_init() {
+wnp_init_ret_t __wnp_platform_linux_init()
+{
   GDBusProxy* proxy;
   GError* error = NULL;
 
@@ -611,7 +626,8 @@ wnp_init_ret_t __wnp_platform_linux_init() {
   return WNP_INIT_SUCCESS;
 }
 
-void __wnp_platform_linux_uninit() {
+void __wnp_platform_linux_uninit()
+{
   g_dbus_connection_signal_unsubscribe(_linux_state.connection, _linux_state.signal_subscription_id);
   g_main_loop_quit(_linux_state.loop);
   g_main_loop_unref(_linux_state.loop);
@@ -620,7 +636,8 @@ void __wnp_platform_linux_uninit() {
   thread_destroy(_linux_state.loop_thread);
 }
 
-void __wnp_platform_linux_free(void* _platform_data) {
+void __wnp_platform_linux_free(void* _platform_data)
+{
   _linux_platform_data_t* platform_data = (_linux_platform_data_t*)_platform_data;
 
   if (platform_data != NULL) {
@@ -630,7 +647,8 @@ void __wnp_platform_linux_free(void* _platform_data) {
   }
 }
 
-void __wnp_platform_linux_event(wnp_player_t* player, wnp_event_t event, int event_id, int data) {
+void __wnp_platform_linux_event(wnp_player_t* player, wnp_event_t event, int event_id, int data)
+{
   _linux_platform_data_t* platform_data = _linux_get_platform_data(player);
   if (platform_data == NULL) return;
 

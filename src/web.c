@@ -49,7 +49,8 @@ static _web_state_t _web_state = {0};
  * ==============================
  */
 
-static _web_platform_data_t* _web_get_platform_data(wnp_player_t* player) {
+static _web_platform_data_t* _web_get_platform_data(wnp_player_t* player)
+{
   if (player == NULL || player->platform != WNP_PLATFORM_WEB) {
     return NULL;
   }
@@ -57,13 +58,15 @@ static _web_platform_data_t* _web_get_platform_data(wnp_player_t* player) {
   return (_web_platform_data_t*)player->_platform_data;
 }
 
-static void _web_assign_str(char dest[WNP_STR_LEN], char* str) {
+static void _web_assign_str(char dest[WNP_STR_LEN], char* str)
+{
   size_t len = strlen(str);
   strncpy(dest, str, WNP_STR_LEN - 1);
   dest[len < WNP_STR_LEN ? len : WNP_STR_LEN - 1] = '\0';
 }
 
-static void _web_parse_player_text(wnp_player_t* player, char* data) {
+static void _web_parse_player_text(wnp_player_t* player, char* data)
+{
   const _web_field_action_t actions[] = {
       {&(((_web_platform_data_t*)player->_platform_data)->port_id), 1},
       {&(player->name), 0},
@@ -145,13 +148,15 @@ static void _web_parse_player_text(wnp_player_t* player, char* data) {
  * =======================
  */
 
-void _web_ws_on_open(cws_client_t* client) {
+void _web_ws_on_open(cws_client_t* client)
+{
   char buffer[WNP_STR_LEN] = {0};
   snprintf(buffer, WNP_STR_LEN - 1, "ADAPTER_VERSION %s,WNPLIB_REVISION 3", _web_state.args.adapter_version);
   cws_send(client, buffer, strlen(buffer), CWS_TYPE_TEXT);
 }
 
-void _web_ws_on_close(cws_client_t* client) {
+void _web_ws_on_close(cws_client_t* client)
+{
   wnp_player_t players[WNP_MAX_PLAYERS] = {0};
   int count = __wnp_start_update_cycle(players);
   for (size_t i = 0; i < count; i++) {
@@ -173,7 +178,8 @@ void _web_ws_on_close(cws_client_t* client) {
   thread_mutex_unlock(&_web_state.cover_buffers_lock);
 }
 
-void _web_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t msg_size, int type) {
+void _web_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_t msg_size, int type)
+{
   if (type == CWS_TYPE_BINARY) {
     size_t id_size = sizeof(uint32_t);
     if (msg_size < id_size) {
@@ -345,7 +351,8 @@ void _web_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_
  * =============================
  */
 
-wnp_init_ret_t __wnp_platform_web_init() {
+wnp_init_ret_t __wnp_platform_web_init()
+{
   __wnp_get_args(&_web_state.args);
 
   int ret = cws_start((cws_server_t){
@@ -367,7 +374,8 @@ wnp_init_ret_t __wnp_platform_web_init() {
   return WNP_INIT_SUCCESS;
 }
 
-void __wnp_platform_web_uninit() {
+void __wnp_platform_web_uninit()
+{
   cws_stop();
   memset(&_web_state.args, 0, sizeof(wnp_args_t));
   for (size_t i = 0; i < WNP_MAX_COVER_BUFFERS; i++) {
@@ -376,7 +384,8 @@ void __wnp_platform_web_uninit() {
   thread_mutex_term(&_web_state.cover_buffers_lock);
 }
 
-void __wnp_platform_web_free(void* _platform_data) {
+void __wnp_platform_web_free(void* _platform_data)
+{
   _web_platform_data_t* platform_data = (_web_platform_data_t*)_platform_data;
 
   if (platform_data != NULL) {
@@ -384,7 +393,8 @@ void __wnp_platform_web_free(void* _platform_data) {
   }
 }
 
-void __wnp_platform_web_event(wnp_player_t* player, wnp_event_t event, int event_id, int data) {
+void __wnp_platform_web_event(wnp_player_t* player, wnp_event_t event, int event_id, int data)
+{
   _web_platform_data_t* platform_data = _web_get_platform_data(player);
   if (platform_data == NULL) return;
 

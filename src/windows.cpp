@@ -63,18 +63,21 @@ static _windows_state_t _windows_state;
  * ==============================
  */
 
-static uint64_t _windows_timestamp() {
+static uint64_t _windows_timestamp()
+{
   return duration_cast<milliseconds>(utc_clock::now().time_since_epoch()).count();
 }
 
-static void _windows_assign_str(char dest[WNP_STR_LEN], const char* str) {
+static void _windows_assign_str(char dest[WNP_STR_LEN], const char* str)
+{
   if (str == NULL) return;
   size_t len = strlen(str);
   strncpy(dest, str, WNP_STR_LEN - 1);
   dest[len < WNP_STR_LEN ? len : WNP_STR_LEN - 1] = '\0';
 }
 
-static void _windows_assign_hstr(char dest[WNP_STR_LEN], hstring src, bool lowercase) {
+static void _windows_assign_hstr(char dest[WNP_STR_LEN], hstring src, bool lowercase)
+{
   std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
   std::string utf8_str = converter.to_bytes(src.c_str());
 
@@ -87,7 +90,8 @@ static void _windows_assign_hstr(char dest[WNP_STR_LEN], hstring src, bool lower
   }
 }
 
-static _windows_platform_data_t* _windows_get_platform_data(wnp_player_t* player) {
+static _windows_platform_data_t* _windows_get_platform_data(wnp_player_t* player)
+{
   if (player == NULL || player->platform != WNP_PLATFORM_WINDOWS) {
     return NULL;
   }
@@ -95,7 +99,8 @@ static _windows_platform_data_t* _windows_get_platform_data(wnp_player_t* player
   return (_windows_platform_data_t*)player->_platform_data;
 }
 
-static bool _windows_is_web_browser(MediaSession session) {
+static bool _windows_is_web_browser(MediaSession session)
+{
   char l_appid[WNP_STR_LEN] = {0};
   _windows_assign_hstr(l_appid, session.SourceAppUserModelId(), true);
 
@@ -121,7 +126,8 @@ static bool _windows_is_web_browser(MediaSession session) {
     return false;
 }
 
-static wnp_player_t* _windows_get_player_from_session(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session) {
+static wnp_player_t* _windows_get_player_from_session(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session)
+{
   for (size_t i = 0; i < count; i++) {
     _windows_platform_data_t* platform_data = _windows_get_platform_data(&players[i]);
     if (platform_data != NULL && platform_data->session == session) {
@@ -136,7 +142,8 @@ static wnp_player_t* _windows_get_player_from_session(wnp_player_t players[WNP_M
 // When players are added or removed, the sessions have new pointers,
 // so comparing them by pointer does not work. We compare by appid here
 // and also replace _platform_data->session with the new one.
-static wnp_player_t* _windows_get_player_from_session_id(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session) {
+static wnp_player_t* _windows_get_player_from_session_id(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session)
+{
   char l_appid[WNP_STR_LEN] = {0};
   _windows_assign_hstr(l_appid, session.SourceAppUserModelId(), true);
 
@@ -151,7 +158,8 @@ static wnp_player_t* _windows_get_player_from_session_id(wnp_player_t players[WN
   return NULL;
 }
 
-static void _windows_get_player_name(MediaSession session, char name_out[WNP_STR_LEN]) {
+static void _windows_get_player_name(MediaSession session, char name_out[WNP_STR_LEN])
+{
   char l_appid[WNP_STR_LEN] = {0};
   _windows_assign_hstr(l_appid, session.SourceAppUserModelId(), true);
 
@@ -166,7 +174,8 @@ static void _windows_get_player_name(MediaSession session, char name_out[WNP_STR
   }
 }
 
-static bool _windows_is_win10() {
+static bool _windows_is_win10()
+{
   static int s_build_number = 0;
 
   if (s_build_number == 0) {
@@ -187,7 +196,8 @@ static bool _windows_is_win10() {
   return (s_build_number >= 19041 && s_build_number < 22000);
 }
 
-static bool _windows_write_thumbnail(int player_id, char l_appid[WNP_STR_LEN], StreamReference stream) {
+static bool _windows_write_thumbnail(int player_id, char l_appid[WNP_STR_LEN], StreamReference stream)
+{
   if (stream == NULL) return false;
 
   char cover_path[WNP_STR_LEN] = {0};
@@ -250,7 +260,8 @@ static bool _windows_write_thumbnail(int player_id, char l_appid[WNP_STR_LEN], S
   }
 }
 
-static void _windows_on_media_properties_changed(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session) {
+static void _windows_on_media_properties_changed(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session)
+{
   wnp_player_t* player = _windows_get_player_from_session(players, count, session);
   if (player == NULL) return;
 
@@ -290,7 +301,8 @@ static void _windows_on_media_properties_changed(wnp_player_t players[WNP_MAX_PL
   }
 }
 
-static void _windows_on_playback_info_changed(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session) {
+static void _windows_on_playback_info_changed(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session)
+{
   wnp_player_t* player = _windows_get_player_from_session(players, count, session);
   if (player == NULL) return;
 
@@ -328,7 +340,8 @@ static void _windows_on_playback_info_changed(wnp_player_t players[WNP_MAX_PLAYE
   player->updated_at = _windows_timestamp();
 }
 
-static void _windows_on_timeline_properties_changed(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session) {
+static void _windows_on_timeline_properties_changed(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session)
+{
   wnp_player_t* player = _windows_get_player_from_session(players, count, session);
   if (player == NULL) return;
 
@@ -347,7 +360,8 @@ static void _windows_on_timeline_properties_changed(wnp_player_t players[WNP_MAX
   player->updated_at = _windows_timestamp();
 }
 
-static void _windows_on_sessions_changed(MediaSessionManager* manager) {
+static void _windows_on_sessions_changed(MediaSessionManager* manager)
+{
   wnp_player_t players[WNP_MAX_PLAYERS] = {0};
   int count = __wnp_start_update_cycle(players);
   for (size_t i = 0; i < count; i++) {
@@ -419,7 +433,8 @@ static void _windows_on_sessions_changed(MediaSessionManager* manager) {
   __wnp_end_update_cycle();
 }
 
-static int _windows_thread_func(void* user_data) {
+static int _windows_thread_func(void* user_data)
+{
   thread_timer_t timer;
   thread_timer_init(&timer);
   size_t i = 0;
@@ -457,21 +472,24 @@ static int _windows_thread_func(void* user_data) {
  * =============================
  */
 
-extern "C" wnp_init_ret_t __wnp_platform_windows_init() {
+extern "C" wnp_init_ret_t __wnp_platform_windows_init()
+{
   _windows_media_session_manager = MediaSessionManager::RequestAsync().get();
   thread_atomic_int_store(_windows_state.thread_exit_flag, 0);
   _windows_state.thread = thread_create(_windows_thread_func, _windows_state.thread_exit_flag, THREAD_STACK_SIZE_DEFAULT);
   return WNP_INIT_SUCCESS;
 }
 
-extern "C" void __wnp_platform_windows_uninit() {
+extern "C" void __wnp_platform_windows_uninit()
+{
   thread_atomic_int_store(_windows_state.thread_exit_flag, 1);
   thread_join(_windows_state.thread);
   thread_destroy(_windows_state.thread);
   _windows_media_session_manager = NULL;
 }
 
-extern "C" void __wnp_platform_windows_free(void* _platform_data) {
+extern "C" void __wnp_platform_windows_free(void* _platform_data)
+{
   _windows_platform_data_t* platform_data = (_windows_platform_data_t*)_platform_data;
 
   if (platform_data) {
@@ -479,7 +497,8 @@ extern "C" void __wnp_platform_windows_free(void* _platform_data) {
   }
 }
 
-extern "C" void __wnp_platform_windows_event(wnp_player_t* player, wnp_event_t event, int event_id, int data) {
+extern "C" void __wnp_platform_windows_event(wnp_player_t* player, wnp_event_t event, int event_id, int data)
+{
   _windows_platform_data_t* platform_data = _windows_get_platform_data(player);
   if (platform_data == NULL) return;
 
