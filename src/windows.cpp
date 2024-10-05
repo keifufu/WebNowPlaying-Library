@@ -4,6 +4,7 @@
 #define THREAD_IMPLEMENTATION
 
 #include "internal.h"
+#include "thread.h"
 #include "wnp.h"
 
 #include <windows.h>
