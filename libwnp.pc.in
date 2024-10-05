@@ -3,7 +3,7 @@ exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
-Name: wnp
+Name: libwnp
 Description: WebNowPlaying library
 Version: @PROJECT_VERSION@
 Cflags: -I${includedir}

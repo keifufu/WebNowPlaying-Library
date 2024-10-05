@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-project(wnp VERSION 3.0.0)
+project(libwnp VERSION 3.0.0)
 
 option(BUILD_EXAMPLES "Build examples in ./examples" OFF)
 
@@ -27,6 +27,7 @@ else()
   message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif()
 
+set(CMAKE_STATIC_LIBRARY_PREFIX "")
 add_library(${PROJECT_NAME} STATIC ${SRC_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -84,35 +85,35 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 endif()
 
 install(TARGETS ${PROJECT_NAME}
-  EXPORT wnpTargets
+  EXPORT libwnpTargets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin
   PUBLIC_HEADER DESTINATION include
 )
 
-install(EXPORT wnpTargets
-  FILE wnpTargets.cmake
-  NAMESPACE wnp::
-  DESTINATION lib/cmake/wnp
+install(EXPORT libwnpTargets
+  FILE libwnpTargets.cmake
+  NAMESPACE libwnp::
+  DESTINATION lib/cmake/libwnp
 )
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/wnpConfig.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/wnpConfig.cmake"
-  INSTALL_DESTINATION "lib/cmake/wnp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/libwnpConfig.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/libwnpConfig.cmake"
+  INSTALL_DESTINATION "lib/cmake/libwnp"
 )
 
 install(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/wnpConfig.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/libwnpConfig.cmake"
   DESTINATION "lib/cmake/wnp"
 )
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/wnp.pc
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libwnp.pc
     DESTINATION lib/pkgconfig)
-  configure_file(wnp.pc.in wnp.pc @ONLY)
+  configure_file(libwnp.pc.in libwnp.pc @ONLY)
 endif()
 
 if(BUILD_EXAMPLES)
