@@ -668,7 +668,8 @@ struct thread_queue_t {
 #error Unknown platform.
 #endif
 
-thread_id_t thread_current_thread_id(void) {
+thread_id_t thread_current_thread_id(void)
+{
 #if defined(_WIN32)
 
   return (void*)(uintptr_t)GetCurrentThreadId();
@@ -682,7 +683,8 @@ thread_id_t thread_current_thread_id(void) {
 #endif
 }
 
-void thread_yield(void) {
+void thread_yield(void)
+{
 #if defined(_WIN32)
 
   SwitchToThread();
@@ -696,7 +698,8 @@ void thread_yield(void) {
 #endif
 }
 
-void thread_exit(int return_code) {
+void thread_exit(int return_code)
+{
 #if defined(_WIN32)
 
   ExitThread((DWORD)return_code);
@@ -710,7 +713,8 @@ void thread_exit(int return_code) {
 #endif
 }
 
-thread_ptr_t thread_create(int (*thread_proc)(void*), void* user_data, int stack_size) {
+thread_ptr_t thread_create(int (*thread_proc)(void*), void* user_data, int stack_size)
+{
 #if defined(_WIN32)
 
   DWORD thread_id;
@@ -732,7 +736,8 @@ thread_ptr_t thread_create(int (*thread_proc)(void*), void* user_data, int stack
 #endif
 }
 
-void thread_destroy(thread_ptr_t thread) {
+void thread_destroy(thread_ptr_t thread)
+{
 #if defined(_WIN32)
 
   WaitForSingleObject((HANDLE)thread, INFINITE);
@@ -747,7 +752,8 @@ void thread_destroy(thread_ptr_t thread) {
 #endif
 }
 
-int thread_join(thread_ptr_t thread) {
+int thread_join(thread_ptr_t thread)
+{
 #if defined(_WIN32)
 
   WaitForSingleObject((HANDLE)thread, INFINITE);
@@ -766,7 +772,8 @@ int thread_join(thread_ptr_t thread) {
 #endif
 }
 
-int thread_detach(thread_ptr_t thread) {
+int thread_detach(thread_ptr_t thread)
+{
 #if defined(_WIN32)
 
   return CloseHandle((HANDLE)thread) != 0;
@@ -780,7 +787,8 @@ int thread_detach(thread_ptr_t thread) {
 #endif
 }
 
-void thread_set_high_priority(void) {
+void thread_set_high_priority(void)
+{
 #if defined(_WIN32)
 
   SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
@@ -797,7 +805,8 @@ void thread_set_high_priority(void) {
 #endif
 }
 
-void thread_mutex_init(thread_mutex_t* mutex) {
+void thread_mutex_init(thread_mutex_t* mutex)
+{
 #if defined(_WIN32)
 
 // Compile-time size check
@@ -825,7 +834,8 @@ void thread_mutex_init(thread_mutex_t* mutex) {
 #endif
 }
 
-void thread_mutex_term(thread_mutex_t* mutex) {
+void thread_mutex_term(thread_mutex_t* mutex)
+{
 #if defined(_WIN32)
 
   DeleteCriticalSection((CRITICAL_SECTION*)mutex);
@@ -839,7 +849,8 @@ void thread_mutex_term(thread_mutex_t* mutex) {
 #endif
 }
 
-void thread_mutex_lock(thread_mutex_t* mutex) {
+void thread_mutex_lock(thread_mutex_t* mutex)
+{
 #if defined(_WIN32)
 
   EnterCriticalSection((CRITICAL_SECTION*)mutex);
@@ -853,7 +864,8 @@ void thread_mutex_lock(thread_mutex_t* mutex) {
 #endif
 }
 
-void thread_mutex_unlock(thread_mutex_t* mutex) {
+void thread_mutex_unlock(thread_mutex_t* mutex)
+{
 #if defined(_WIN32)
 
   LeaveCriticalSection((CRITICAL_SECTION*)mutex);
@@ -890,7 +902,8 @@ struct thread_internal_signal_t {
 #endif
 };
 
-void thread_signal_init(thread_signal_t* signal) {
+void thread_signal_init(thread_signal_t* signal)
+{
 // Compile-time size check
 #pragma warning(push)
 #pragma warning(disable : 4214) // nonstandard extension used: bit field types
@@ -923,7 +936,8 @@ void thread_signal_init(thread_signal_t* signal) {
 #endif
 }
 
-void thread_signal_term(thread_signal_t* signal) {
+void thread_signal_term(thread_signal_t* signal)
+{
   struct thread_internal_signal_t* internal = (struct thread_internal_signal_t*)signal;
 
 #if defined(_WIN32)
@@ -944,7 +958,8 @@ void thread_signal_term(thread_signal_t* signal) {
 #endif
 }
 
-void thread_signal_raise(thread_signal_t* signal) {
+void thread_signal_raise(thread_signal_t* signal)
+{
   struct thread_internal_signal_t* internal = (struct thread_internal_signal_t*)signal;
 
 #if defined(_WIN32)
@@ -970,7 +985,8 @@ void thread_signal_raise(thread_signal_t* signal) {
 #endif
 }
 
-int thread_signal_wait(thread_signal_t* signal, int timeout_ms) {
+int thread_signal_wait(thread_signal_t* signal, int timeout_ms)
+{
   struct thread_internal_signal_t* internal = (struct thread_internal_signal_t*)signal;
 
 #if defined(_WIN32)
@@ -1024,7 +1040,8 @@ int thread_signal_wait(thread_signal_t* signal, int timeout_ms) {
 #endif
 }
 
-int thread_atomic_int_load(thread_atomic_int_t* atomic) {
+int thread_atomic_int_load(thread_atomic_int_t* atomic)
+{
 #if defined(_WIN32)
 
   return InterlockedCompareExchange(&atomic->i, 0, 0);
@@ -1038,7 +1055,8 @@ int thread_atomic_int_load(thread_atomic_int_t* atomic) {
 #endif
 }
 
-void thread_atomic_int_store(thread_atomic_int_t* atomic, int desired) {
+void thread_atomic_int_store(thread_atomic_int_t* atomic, int desired)
+{
 #if defined(_WIN32)
 
   InterlockedExchange(&atomic->i, desired);
@@ -1053,7 +1071,8 @@ void thread_atomic_int_store(thread_atomic_int_t* atomic, int desired) {
 #endif
 }
 
-int thread_atomic_int_inc(thread_atomic_int_t* atomic) {
+int thread_atomic_int_inc(thread_atomic_int_t* atomic)
+{
 #if defined(_WIN32)
 
   return InterlockedIncrement(&atomic->i) - 1;
@@ -1067,7 +1086,8 @@ int thread_atomic_int_inc(thread_atomic_int_t* atomic) {
 #endif
 }
 
-int thread_atomic_int_dec(thread_atomic_int_t* atomic) {
+int thread_atomic_int_dec(thread_atomic_int_t* atomic)
+{
 #if defined(_WIN32)
 
   return InterlockedDecrement(&atomic->i) + 1;
@@ -1081,7 +1101,8 @@ int thread_atomic_int_dec(thread_atomic_int_t* atomic) {
 #endif
 }
 
-int thread_atomic_int_add(thread_atomic_int_t* atomic, int value) {
+int thread_atomic_int_add(thread_atomic_int_t* atomic, int value)
+{
 #if defined(_WIN32)
 
   return InterlockedExchangeAdd(&atomic->i, value);
@@ -1095,7 +1116,8 @@ int thread_atomic_int_add(thread_atomic_int_t* atomic, int value) {
 #endif
 }
 
-int thread_atomic_int_sub(thread_atomic_int_t* atomic, int value) {
+int thread_atomic_int_sub(thread_atomic_int_t* atomic, int value)
+{
 #if defined(_WIN32)
 
   return InterlockedExchangeAdd(&atomic->i, -value);
@@ -1109,7 +1131,8 @@ int thread_atomic_int_sub(thread_atomic_int_t* atomic, int value) {
 #endif
 }
 
-int thread_atomic_int_swap(thread_atomic_int_t* atomic, int desired) {
+int thread_atomic_int_swap(thread_atomic_int_t* atomic, int desired)
+{
 #if defined(_WIN32)
 
   return InterlockedExchange(&atomic->i, desired);
@@ -1125,7 +1148,8 @@ int thread_atomic_int_swap(thread_atomic_int_t* atomic, int desired) {
 #endif
 }
 
-int thread_atomic_int_compare_and_swap(thread_atomic_int_t* atomic, int expected, int desired) {
+int thread_atomic_int_compare_and_swap(thread_atomic_int_t* atomic, int expected, int desired)
+{
 #if defined(_WIN32)
 
   return InterlockedCompareExchange(&atomic->i, desired, expected);
@@ -1139,7 +1163,8 @@ int thread_atomic_int_compare_and_swap(thread_atomic_int_t* atomic, int expected
 #endif
 }
 
-void* thread_atomic_ptr_load(thread_atomic_ptr_t* atomic) {
+void* thread_atomic_ptr_load(thread_atomic_ptr_t* atomic)
+{
 #if defined(_WIN32)
 
   return InterlockedCompareExchangePointer(&atomic->ptr, 0, 0);
@@ -1153,7 +1178,8 @@ void* thread_atomic_ptr_load(thread_atomic_ptr_t* atomic) {
 #endif
 }
 
-void thread_atomic_ptr_store(thread_atomic_ptr_t* atomic, void* desired) {
+void thread_atomic_ptr_store(thread_atomic_ptr_t* atomic, void* desired)
+{
 #if defined(_WIN32)
 
 #pragma warning(push)
@@ -1173,7 +1199,8 @@ void thread_atomic_ptr_store(thread_atomic_ptr_t* atomic, void* desired) {
 #endif
 }
 
-void* thread_atomic_ptr_swap(thread_atomic_ptr_t* atomic, void* desired) {
+void* thread_atomic_ptr_swap(thread_atomic_ptr_t* atomic, void* desired)
+{
 #if defined(_WIN32)
 
 #pragma warning(push)
@@ -1194,7 +1221,8 @@ void* thread_atomic_ptr_swap(thread_atomic_ptr_t* atomic, void* desired) {
 #endif
 }
 
-void* thread_atomic_ptr_compare_and_swap(thread_atomic_ptr_t* atomic, void* expected, void* desired) {
+void* thread_atomic_ptr_compare_and_swap(thread_atomic_ptr_t* atomic, void* expected, void* desired)
+{
 #if defined(_WIN32)
 
   return InterlockedCompareExchangePointer(&atomic->ptr, desired, expected);
@@ -1208,7 +1236,8 @@ void* thread_atomic_ptr_compare_and_swap(thread_atomic_ptr_t* atomic, void* expe
 #endif
 }
 
-void thread_timer_init(thread_timer_t* timer) {
+void thread_timer_init(thread_timer_t* timer)
+{
 #if defined(_WIN32)
 
 // Compile-time size check
@@ -1234,7 +1263,8 @@ void thread_timer_init(thread_timer_t* timer) {
 #endif
 }
 
-void thread_timer_term(thread_timer_t* timer) {
+void thread_timer_term(thread_timer_t* timer)
+{
 #if defined(_WIN32)
 
   CloseHandle(*(HANDLE*)timer);
@@ -1251,7 +1281,8 @@ void thread_timer_term(thread_timer_t* timer) {
 #endif
 }
 
-void thread_timer_wait(thread_timer_t* timer, THREAD_U64 nanoseconds) {
+void thread_timer_wait(thread_timer_t* timer, THREAD_U64 nanoseconds)
+{
 #if defined(_WIN32)
 
   LARGE_INTEGER due_time;
@@ -1274,7 +1305,8 @@ void thread_timer_wait(thread_timer_t* timer, THREAD_U64 nanoseconds) {
 #endif
 }
 
-thread_tls_t thread_tls_create(void) {
+thread_tls_t thread_tls_create(void)
+{
 #if defined(_WIN32)
 
   DWORD tls = TlsAlloc();
@@ -1296,7 +1328,8 @@ thread_tls_t thread_tls_create(void) {
 #endif
 }
 
-void thread_tls_destroy(thread_tls_t tls) {
+void thread_tls_destroy(thread_tls_t tls)
+{
 #if defined(_WIN32)
 
   TlsFree((DWORD)(uintptr_t)tls);
@@ -1310,7 +1343,8 @@ void thread_tls_destroy(thread_tls_t tls) {
 #endif
 }
 
-void thread_tls_set(thread_tls_t tls, void* value) {
+void thread_tls_set(thread_tls_t tls, void* value)
+{
 #if defined(_WIN32)
 
   TlsSetValue((DWORD)(uintptr_t)tls, value);
@@ -1324,7 +1358,8 @@ void thread_tls_set(thread_tls_t tls, void* value) {
 #endif
 }
 
-void* thread_tls_get(thread_tls_t tls) {
+void* thread_tls_get(thread_tls_t tls)
+{
 #if defined(_WIN32)
 
   return TlsGetValue((DWORD)(uintptr_t)tls);
@@ -1338,7 +1373,8 @@ void* thread_tls_get(thread_tls_t tls) {
 #endif
 }
 
-void thread_queue_init(thread_queue_t* queue, int size, void** values, int count) {
+void thread_queue_init(thread_queue_t* queue, int size, void** values, int count)
+{
   queue->values = values;
   thread_signal_init(&queue->data_ready);
   thread_signal_init(&queue->space_open);
@@ -1352,12 +1388,14 @@ void thread_queue_init(thread_queue_t* queue, int size, void** values, int count
 #endif
 }
 
-void thread_queue_term(thread_queue_t* queue) {
+void thread_queue_term(thread_queue_t* queue)
+{
   thread_signal_term(&queue->space_open);
   thread_signal_term(&queue->data_ready);
 }
 
-int thread_queue_produce(thread_queue_t* queue, void* value, int timeout_ms) {
+int thread_queue_produce(thread_queue_t* queue, void* value, int timeout_ms)
+{
 #ifndef NDEBUG
   if (thread_atomic_int_compare_and_swap(&queue->id_produce_is_set, 0, 1) == 0) queue->id_produce = thread_current_thread_id();
   THREAD_ASSERT(thread_current_thread_id() == queue->id_produce, "thread_queue_produce called from multiple threads");
@@ -1374,7 +1412,8 @@ int thread_queue_produce(thread_queue_t* queue, void* value, int timeout_ms) {
   return 1;
 }
 
-void* thread_queue_consume(thread_queue_t* queue, int timeout_ms) {
+void* thread_queue_consume(thread_queue_t* queue, int timeout_ms)
+{
 #ifndef NDEBUG
   if (thread_atomic_int_compare_and_swap(&queue->id_consume_is_set, 0, 1) == 0) queue->id_consume = thread_current_thread_id();
   THREAD_ASSERT(thread_current_thread_id() == queue->id_consume, "thread_queue_consume called from multiple threads");
@@ -1390,7 +1429,8 @@ void* thread_queue_consume(thread_queue_t* queue, int timeout_ms) {
   return retval;
 }
 
-int thread_queue_count(thread_queue_t* queue) {
+int thread_queue_count(thread_queue_t* queue)
+{
   return thread_atomic_int_load(&queue->count);
 }
 
