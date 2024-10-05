@@ -107,7 +107,7 @@ configure_package_config_file(
 
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/libwnpConfig.cmake"
-  DESTINATION "lib/cmake/wnp"
+  DESTINATION "lib/cmake/libwnp"
 )
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
