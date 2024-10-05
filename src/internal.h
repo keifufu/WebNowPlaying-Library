@@ -1,7 +1,6 @@
 #ifndef WNP_INTERNALS_H
 #define WNP_INTERNALS_H
 
-#include "thread.h"
 #include "wnp.h"
 #include <stdio.h>
 #include <stdlib.h>

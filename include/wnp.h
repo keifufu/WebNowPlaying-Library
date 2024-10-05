@@ -183,6 +183,7 @@ typedef enum {
   WNP_INIT_INVALID_ADAPTER_VERSION = 2,
   WNP_INIT_WEB_PORT_IN_USE = 3,
   WNP_INIT_LINUX_DBUS_ERROR = 4,
+  WNP_INIT_DARWIN_FAILED = 5,
 } wnp_init_ret_t;
 
 /* Initializes and starts WebNowPlaying. */

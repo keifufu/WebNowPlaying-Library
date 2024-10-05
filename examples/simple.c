@@ -16,7 +16,7 @@ int main()
   };
 
   if (wnp_init(&args) != WNP_INIT_SUCCESS) {
-    fprintf(stderr, "Failed to initialize WebNowPlaying");
+    fprintf(stderr, "Failed to initialize WebNowPlaying\n");
     exit(EXIT_FAILURE);
   }
 

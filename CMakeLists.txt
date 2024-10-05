@@ -17,7 +17,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
   list(APPEND SRC_FILES src/linux.c src/stb_image.c)
   add_compile_definitions(WNP_BUILD_PLATFORM_LINUX)
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
-  list(APPEND SRC_FILES src/darwin.mm)
+  list(APPEND SRC_FILES src/darwin.m)
   add_compile_definitions(WNP_BUILD_PLATFORM_DARWIN)
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
   list(APPEND SRC_FILES src/windows.cpp)
@@ -72,6 +72,15 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
       oleaut32.lib
       advapi32.lib
   )
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+  target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+      "-framework Cocoa"
+      "-framework CoreFoundation"
+      "-framework Foundation"
+      "-F /System/Library/PrivateFrameworks"
+      "-framework MediaRemote"
+)
 endif()
 
 install(TARGETS ${PROJECT_NAME}

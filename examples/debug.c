@@ -5,7 +5,8 @@
 
 wnp_player_t players[WNP_MAX_PLAYERS] = {0};
 
-void on_player_added(wnp_player_t* player, void* callback_data) {
+void on_player_added(wnp_player_t* player, void* callback_data)
+{
   players[player->id] = *player;
   printf("=== PLAYER ADDED ===\n");
   printf("id:                 %d\n", player->id);
@@ -35,11 +36,13 @@ void on_player_added(wnp_player_t* player, void* callback_data) {
   printf("created_at          %ld\n", player->created_at);
   printf("updated_at          %ld\n", player->updated_at);
   printf("active_at           %ld\n", player->active_at);
+  printf("is_web_browser      %d\n", player->is_web_browser);
   printf("platform            %d\n", player->platform);
   printf("====================\n");
 }
 
-void on_player_updated(wnp_player_t* player, void* callback_data) {
+void on_player_updated(wnp_player_t* player, void* callback_data)
+{
   printf("=== PLAYER UPDATED ===\n");
   printf("%s (%d)\n", player->name, player->id);
   printf("=== CHANGED VALUES ===\n");
@@ -68,17 +71,20 @@ void on_player_updated(wnp_player_t* player, void* callback_data) {
   if (players[player->id].created_at != player->created_at) printf("created_at          %ld\n", player->created_at);
   if (players[player->id].updated_at != player->updated_at) printf("updated_at          %ld\n", player->updated_at);
   if (players[player->id].active_at != player->active_at) printf("active_at           %ld\n", player->active_at);
+  if (players[player->id].is_web_browser != player->is_web_browser) printf("is_web_browser      %d\n", player->is_web_browser);
   if (players[player->id].platform != player->platform) printf("platform            %d\n", player->platform);
   printf("======================\n");
   players[player->id] = *player;
 }
 
-void on_player_removed(wnp_player_t* player, void* callback_data) {
+void on_player_removed(wnp_player_t* player, void* callback_data)
+{
   printf("Player removed: %s (%d)\n", player->name, player->id);
   players[player->id] = WNP_DEFAULT_PLAYER;
 }
 
-void on_active_player_changed(wnp_player_t* player, void* callback_data) {
+void on_active_player_changed(wnp_player_t* player, void* callback_data)
+{
   if (player == NULL) {
     printf("Active player changed to: None\n");
   } else {
@@ -86,7 +92,8 @@ void on_active_player_changed(wnp_player_t* player, void* callback_data) {
   }
 }
 
-int main() {
+int main()
+{
   for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
     players[i] = WNP_DEFAULT_PLAYER;
   }
@@ -102,7 +109,7 @@ int main() {
   };
 
   if (wnp_init(&args) != WNP_INIT_SUCCESS) {
-    fprintf(stderr, "Failed to initialize WebNowPlaying");
+    fprintf(stderr, "Failed to initialize WebNowPlaying\n");
     exit(EXIT_FAILURE);
   }
 

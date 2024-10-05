@@ -2,6 +2,7 @@
 
 #include "cws.h"
 #include "internal.h"
+#include "thread.h"
 #include "wnp.h"
 
 /**
@@ -58,7 +59,7 @@ static _web_platform_data_t* _web_get_platform_data(wnp_player_t* player)
   return (_web_platform_data_t*)player->_platform_data;
 }
 
-static void _web_assign_str(char dest[WNP_STR_LEN], char* str)
+static void _web_assign_str(char dest[WNP_STR_LEN], const char* str)
 {
   size_t len = strlen(str);
   strncpy(dest, str, WNP_STR_LEN - 1);

@@ -1,5 +1,6 @@
 #include "wnp.h"
 #include "internal.h"
+#include "thread.h"
 
 /**
  * ================================
@@ -108,9 +109,11 @@ static void _wnp_callback(int type, int player_id)
 
 static void _wnp_recalculate_active_player()
 {
+  if (!wnp_is_initialized()) return;
+
   int active_player_id = -1;
   uint64_t max_active_at = 0;
-  bool found_active = true;
+  bool found_active = false;
 
   thread_mutex_lock(&_wnp_state.players_lock);
   for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
@@ -171,6 +174,7 @@ static bool _wnp_is_adapter_version_valid(const char* adapter_version)
 
 static int _wnp_get_all_players_lockable(wnp_player_t players_out[WNP_MAX_PLAYERS], bool skip_browsers, bool lock)
 {
+  if (!wnp_is_initialized()) return 0;
   int count = 0;
 
   if (lock) thread_mutex_lock(&_wnp_state.players_lock);
@@ -239,6 +243,7 @@ void __wnp_get_args(wnp_args_t* args_out)
 
 int __wnp_start_update_cycle(wnp_player_t players_out[WNP_MAX_PLAYERS])
 {
+  if (!wnp_is_initialized()) return 0;
   thread_mutex_lock(&_wnp_state.players_lock);
   _wnp_state.update_cycle = true;
   return _wnp_get_all_players_lockable(players_out, false, false);
@@ -332,6 +337,8 @@ void __wnp_remove_player(int player_id)
 
 void __wnp_end_update_cycle()
 {
+  if (!wnp_is_initialized()) return;
+
   _wnp_state.update_cycle = false;
   thread_mutex_unlock(&_wnp_state.players_lock);
 
@@ -417,6 +424,7 @@ bool __wnp_write_cover(int player_id, void* data, uint64_t size)
 
 void __wnp_set_event_result(int event_id, wnp_event_result_t result)
 {
+  if (!wnp_is_initialized()) return;
   thread_mutex_lock(&_wnp_state.event_results_lock);
   _wnp_state.event_results[event_id] = result;
   thread_mutex_unlock(&_wnp_state.event_results_lock);
@@ -445,6 +453,7 @@ static int _wnp_failed_event()
 
 static int _wnp_execute_event(int player_id, wnp_event_t event, int data)
 {
+  if (!wnp_is_initialized()) return 0;
   if (player_id < 0 || player_id >= WNP_MAX_PLAYERS) {
     return _wnp_failed_event();
   }
@@ -525,6 +534,33 @@ static int _wnp_execute_event(int player_id, wnp_event_t event, int data)
   return event_id;
 }
 
+static void _wnp_init_state(wnp_args_t* args)
+{
+  if (args != NULL) {
+    _wnp_state.args = *args;
+    thread_mutex_init(&_wnp_state.players_lock);
+    thread_mutex_init(&_wnp_state.event_results_lock);
+  } else {
+    memset(&_wnp_state.args, 0, sizeof(wnp_args_t));
+    thread_mutex_term(&_wnp_state.players_lock);
+    thread_mutex_term(&_wnp_state.event_results_lock);
+  }
+  for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
+    _wnp_state.players[i] = WNP_DEFAULT_PLAYER;
+  }
+  _wnp_state.total_web_players = 0;
+  for (size_t i = 0; i < WNP_MAX_EVENT_RESULTS; i++) {
+    _wnp_state.event_results[i] = WNP_EVENT_FAILED;
+  }
+  _wnp_state.active_player_id = -1;
+  _wnp_state.update_cycle = false;
+  for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
+    _wnp_state.update_cycle_added_players[i] = -1;
+    _wnp_state.update_cycle_updated_players[i] = -1;
+    _wnp_state.update_cycle_removed_players[i] = WNP_DEFAULT_PLAYER;
+  }
+}
+
 /**
  * ===============================
  * | Public management functions |
@@ -553,25 +589,8 @@ wnp_init_ret_t wnp_init(wnp_args_t* args)
     return WNP_INIT_INVALID_ADAPTER_VERSION;
   }
 
-  /* init state */
-  for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
-    _wnp_state.players[i] = WNP_DEFAULT_PLAYER;
-  }
-  thread_mutex_init(&_wnp_state.players_lock);
-  _wnp_state.total_web_players = 0;
-  for (size_t i = 0; i < WNP_MAX_EVENT_RESULTS; i++) {
-    _wnp_state.event_results[i] = WNP_EVENT_FAILED;
-  }
-  thread_mutex_init(&_wnp_state.event_results_lock);
-  _wnp_state.active_player_id = -1;
-  _wnp_state.args = *args;
-  _wnp_state.update_cycle = false;
-  for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
-    _wnp_state.update_cycle_added_players[i] = -1;
-    _wnp_state.update_cycle_updated_players[i] = -1;
-    _wnp_state.update_cycle_removed_players[i] = WNP_DEFAULT_PLAYER;
-  }
-  /* end init state */
+  _wnp_init_state(args);
+  _wnp_state.is_initialized = true;
 
   void (*uninit_functions[4])() = {0};
   int uninit_num = 0;
@@ -590,12 +609,12 @@ wnp_init_ret_t wnp_init(wnp_args_t* args)
   WNP_PLATFORM_INIT(windows);
 #endif /* WNP_BUILD_PLATFORM_WINDOWS */
 
-  if (retval == WNP_INIT_SUCCESS) {
-    _wnp_state.is_initialized = true;
-  } else {
+  if (retval != WNP_INIT_SUCCESS) {
     for (size_t i = 0; i < uninit_num; i++) {
       uninit_functions[i]();
     }
+    _wnp_init_state(false);
+    _wnp_state.is_initialized = false;
   }
 
   return retval;
@@ -606,28 +625,6 @@ void wnp_uninit()
   if (!_wnp_state.is_initialized) {
     return;
   }
-
-  /* cleanup state */
-  for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
-    __wnp_start_update_cycle(NULL);
-    __wnp_remove_player(_wnp_state.players[i].id);
-    __wnp_end_update_cycle();
-  }
-  thread_mutex_term(&_wnp_state.players_lock);
-  _wnp_state.total_web_players = 0;
-  for (size_t i = 0; i < WNP_MAX_EVENT_RESULTS; i++) {
-    _wnp_state.event_results[i] = WNP_EVENT_PENDING;
-  }
-  thread_mutex_term(&_wnp_state.event_results_lock);
-  _wnp_state.active_player_id = -1;
-  memset(&_wnp_state.args, 0, sizeof(wnp_args_t));
-  _wnp_state.update_cycle = false;
-  for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
-    _wnp_state.update_cycle_added_players[i] = -1;
-    _wnp_state.update_cycle_updated_players[i] = -1;
-    _wnp_state.update_cycle_removed_players[i] = WNP_DEFAULT_PLAYER;
-  }
-  /* end cleanup state */
 
 #ifdef WNP_BUILD_PLATFORM_WEB
   __wnp_platform_web_uninit();
@@ -641,6 +638,11 @@ void wnp_uninit()
 #ifdef WNP_BUILD_PLATFORM_WINDOWS
   __wnp_platform_windows_uninit();
 #endif /* WNP_BUILD_PLATFORM_WINDOWS */
+
+  /* cleanup state */
+  _wnp_state.is_initialized = true;
+  _wnp_init_state(false);
+  /* end cleanup state */
 }
 
 bool wnp_is_initialized()
@@ -656,6 +658,8 @@ bool wnp_is_initialized()
 
 bool wnp_get_player(int player_id, wnp_player_t* player_out)
 {
+  if (!wnp_is_initialized()) return false;
+
   if (player_id < 0 || player_id >= WNP_MAX_PLAYERS) {
     return false;
   }
@@ -674,6 +678,8 @@ bool wnp_get_player(int player_id, wnp_player_t* player_out)
 
 bool wnp_get_active_player(wnp_player_t* player_out)
 {
+  if (!wnp_is_initialized()) return false;
+
   if (_wnp_state.active_player_id == -1) {
     return false;
   }
@@ -816,6 +822,8 @@ void wnp_utf8_to_utf16(unsigned char* input, int input_len, uint16_t* output, in
 
 wnp_event_result_t wnp_get_event_result(int event_id)
 {
+  if (!wnp_is_initialized()) return WNP_EVENT_FAILED;
+
   if (event_id < 0 || event_id >= WNP_MAX_EVENT_RESULTS) {
     return WNP_EVENT_FAILED;
   }
@@ -829,6 +837,8 @@ wnp_event_result_t wnp_get_event_result(int event_id)
 
 wnp_event_result_t wnp_wait_for_event_result(int event_id)
 {
+  if (!wnp_is_initialized()) return WNP_EVENT_FAILED;
+
   if (event_id < 0 || event_id >= WNP_MAX_EVENT_RESULTS) {
     return WNP_EVENT_FAILED;
   }
