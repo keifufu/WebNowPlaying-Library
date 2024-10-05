@@ -109,6 +109,12 @@ install(FILES
   DESTINATION "lib/cmake/wnp"
 )
 
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/wnp.pc
+    DESTINATION lib/pkgconfig)
+  configure_file(wnp.pc.in wnp.pc @ONLY)
+endif()
+
 if(BUILD_EXAMPLES)
   message(STATUS "Building examples...")
 
