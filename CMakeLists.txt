@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-project(libwnp VERSION)
+project(libwnp)
 file(READ "VERSION" PROJECT_VERSION)
 
 option(BUILD_EXAMPLES "Build examples in ./examples" OFF)
