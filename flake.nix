@@ -9,12 +9,13 @@
     systems = [
       "x86_64-linux"
       "aarch64-linux"
+      "x86_64-darwin"
       "aarch64-darwin"
     ];
     perSystem = { pkgs, system, lib, ...}: {
       packages.default = pkgs.stdenv.mkDerivation {
         pname = "libwnp";
-        version = "3.0.0";
+        version = builtins.readFile ./VERSION;
         src = ./.;
         nativeBuildInputs = [ pkgs.cmake ]
           ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.pkg-config ];
