@@ -356,6 +356,10 @@ wnp_init_ret_t __wnp_platform_web_init()
 {
   __wnp_get_args(&_web_state.args);
 
+  if (_web_state.args.web_port == 0) {
+    return WNP_INIT_SUCCESS;
+  }
+
   int ret = cws_start((cws_server_t){
       .port = _web_state.args.web_port,
       .on_open = &_web_ws_on_open,
@@ -377,6 +381,10 @@ wnp_init_ret_t __wnp_platform_web_init()
 
 void __wnp_platform_web_uninit()
 {
+  if (_web_state.args.web_port == 0) {
+    return;
+  }
+
   cws_stop();
   memset(&_web_state.args, 0, sizeof(wnp_args_t));
   for (size_t i = 0; i < WNP_MAX_COVER_BUFFERS; i++) {

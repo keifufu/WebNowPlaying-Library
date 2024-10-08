@@ -162,8 +162,8 @@ extern wnp_player_t WNP_DEFAULT_PLAYER;
 typedef struct {
   /* Port number for the WEB platform. Set to 0 to disable WEB. */
   int web_port;
-  /* Adapter version formatted as "x.x.x\0" */
-  char adapter_version[6];
+  /* Adapter version (semver) */
+  char adapter_version[WNP_STR_LEN];
   // Callback invoked after a player is added
   void (*on_player_added)(wnp_player_t* player, void* data);
   // Callback invoked after a player is updated
@@ -180,10 +180,9 @@ typedef struct {
 typedef enum {
   WNP_INIT_SUCCESS = 0,
   WNP_INIT_ALREADY_INITIALIZED = 1,
-  WNP_INIT_INVALID_ADAPTER_VERSION = 2,
-  WNP_INIT_WEB_PORT_IN_USE = 3,
-  WNP_INIT_LINUX_DBUS_ERROR = 4,
-  WNP_INIT_DARWIN_FAILED = 5,
+  WNP_INIT_WEB_PORT_IN_USE = 2,
+  WNP_INIT_LINUX_DBUS_ERROR = 3,
+  WNP_INIT_DARWIN_FAILED = 4,
 } wnp_init_ret_t;
 
 /* Initializes and starts WebNowPlaying. */

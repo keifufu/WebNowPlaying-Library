@@ -142,36 +142,6 @@ static void _wnp_recalculate_active_player()
   }
 }
 
-static bool _wnp_is_adapter_version_valid(const char* adapter_version)
-{
-  if (adapter_version == NULL) return false;
-
-  const char* p = adapter_version;
-  int dots = 0;
-  int nums = 0;
-  int other = 0;
-  bool consecutive = false;
-
-  while (*p != '\0') {
-    if (*p == '.') {
-      dots++;
-      consecutive = false;
-    } else if (*p >= 48 && *p <= 57) {
-      nums++;
-      if (!consecutive) {
-        consecutive = true;
-      } else {
-        return false;
-      }
-    } else {
-      other++;
-    }
-    p++;
-  }
-
-  return (dots == 2 && nums == 3 && other == 0);
-}
-
 static int _wnp_get_all_players_lockable(wnp_player_t players_out[WNP_MAX_PLAYERS], bool skip_browsers, bool lock)
 {
   if (!wnp_is_initialized()) return 0;
@@ -583,10 +553,6 @@ wnp_init_ret_t wnp_init(wnp_args_t* args)
 
   if (_wnp_state.is_initialized) {
     return WNP_INIT_ALREADY_INITIALIZED;
-  }
-
-  if (!_wnp_is_adapter_version_valid(args->adapter_version)) {
-    return WNP_INIT_INVALID_ADAPTER_VERSION;
   }
 
   _wnp_init_state(args);
