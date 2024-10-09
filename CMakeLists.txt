@@ -12,7 +12,10 @@ option(BUILD_EXAMPLES "Build examples in ./examples" OFF)
 set(SRC_FILES
   src/wnp.c
   src/cws.c
+  src/web.c
 )
+
+add_compile_definitions(WNP_BUILD_PLATFORM_WEB)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
   list(APPEND SRC_FILES src/linux.c src/stb_image.c)
