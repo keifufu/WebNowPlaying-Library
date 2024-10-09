@@ -45,7 +45,7 @@ typedef winrt::Windows::Storage::Streams::IRandomAccessStreamReference StreamRef
 MediaSessionManager _windows_media_session_manager = NULL;
 typedef struct {
   thread_ptr_t thread;
-  thread_atomic_int_t* thread_exit_flag;
+  thread_atomic_int_t thread_exit_flag;
 } _windows_state_t;
 
 typedef struct {
@@ -201,17 +201,17 @@ static bool _windows_write_thumbnail(int player_id, char l_appid[WNP_STR_LEN], S
 {
   if (stream == NULL) return false;
 
-  char cover_path[WNP_STR_LEN] = {0};
-  if (!__wnp_get_cover_path(player_id, cover_path)) {
+  char _cover_path[WNP_STR_LEN] = {0};
+  if (!__wnp_get_cover_path(player_id, _cover_path)) {
     return false;
   }
 
-  for (size_t i = 0; cover_path[i] != '\0'; i++) {
-    if (cover_path[i] == '/') {
-      cover_path[i] = '\\';
+  for (size_t i = 0; _cover_path[i] != '\0'; i++) {
+    if (_cover_path[i] == '/') {
+      _cover_path[i] = '\\';
     }
   }
-  *cover_path += 7;
+  char* cover_path = _cover_path + 7;
 
   std::filesystem::path cover_path_path = std::filesystem::path(cover_path);
   std::filesystem::path folder_path = cover_path_path.parent_path();
@@ -227,7 +227,7 @@ static bool _windows_write_thumbnail(int player_id, char l_appid[WNP_STR_LEN], S
     cover_stream.ReadAsync(cover_buffer, cover_buffer.Capacity(), InputStreamOptions::ReadAhead).get();
     FileIO::WriteBufferAsync(cover_file, cover_buffer).get();
 
-    if (_windows_is_win10() && strstr(l_appid, "spotify") != NULL) {
+    if (_windows_is_win10() && (strstr(l_appid, "spotify") != NULL)) {
       Gdiplus::GdiplusStartupInput gdiplusStartupInput;
       ULONG_PTR gdiplusToken;
       Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
@@ -248,24 +248,14 @@ static bool _windows_write_thumbnail(int player_id, char l_appid[WNP_STR_LEN], S
       Gdiplus::GdiplusShutdown(gdiplusToken);
     }
 
-    *cover_path -= 7;
-    for (size_t i = 0; cover_path[i] != '\0'; i++) {
-      if (cover_path[i] == '\\') {
-        cover_path[i] = '/';
-      }
-    }
-
     return true;
   } catch (const winrt::hresult_error& ex) {
     return false;
   }
 }
 
-static void _windows_on_media_properties_changed(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session)
+static void _windows_on_media_properties_changed(wnp_player_t* player, MediaSession session)
 {
-  wnp_player_t* player = _windows_get_player_from_session(players, count, session);
-  if (player == NULL) return;
-
   try {
     MediaProperties info = session.TryGetMediaPropertiesAsync().get();
 
@@ -302,11 +292,8 @@ static void _windows_on_media_properties_changed(wnp_player_t players[WNP_MAX_PL
   }
 }
 
-static void _windows_on_playback_info_changed(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session)
+static void _windows_on_playback_info_changed(wnp_player_t* player, MediaSession session)
 {
-  wnp_player_t* player = _windows_get_player_from_session(players, count, session);
-  if (player == NULL) return;
-
   PlaybackInfo info = session.GetPlaybackInfo();
   PlaybackControls controls = info.Controls();
   PlaybackStatus status = info.PlaybackStatus();
@@ -341,11 +328,8 @@ static void _windows_on_playback_info_changed(wnp_player_t players[WNP_MAX_PLAYE
   player->updated_at = _windows_timestamp();
 }
 
-static void _windows_on_timeline_properties_changed(wnp_player_t players[WNP_MAX_PLAYERS], int count, MediaSession session)
+static void _windows_on_timeline_properties_changed(wnp_player_t* player, MediaSession session)
 {
-  wnp_player_t* player = _windows_get_player_from_session(players, count, session);
-  if (player == NULL) return;
-
   TimelineProperties info = session.GetTimelineProperties();
 
   player->duration = duration_cast<seconds>(info.EndTime()).count();
@@ -405,17 +389,16 @@ static void _windows_on_sessions_changed(MediaSessionManager* manager)
     player._platform_data = platform_data;
     player.platform = WNP_PLATFORM_WINDOWS;
     player.is_web_browser = _windows_is_web_browser(session);
+    _windows_get_player_name(session, player.name);
+    player.rating_system = WNP_RATING_SYSTEM_NONE;
+    player.available_repeat = WNP_REPEAT_NONE | WNP_REPEAT_ALL | WNP_REPEAT_ONE;
+    player.created_at = _windows_timestamp();
 
     player.id = __wnp_add_player(&player);
     if (player.id == -1) {
       free(platform_data);
       continue;
     }
-
-    _windows_get_player_name(session, player.name);
-    player.rating_system = WNP_RATING_SYSTEM_NONE;
-    player.available_repeat = WNP_REPEAT_NONE | WNP_REPEAT_ALL | WNP_REPEAT_ONE;
-    player.created_at = _windows_timestamp();
   }
 
   for (size_t i = 0; i < count; i++) {
@@ -424,9 +407,10 @@ static void _windows_on_sessions_changed(MediaSessionManager* manager)
       if (platform_data->should_remove) {
         __wnp_remove_player(players[i].id);
       } else {
-        _windows_on_media_properties_changed(players, count, platform_data->session);
-        _windows_on_playback_info_changed(players, count, platform_data->session);
-        _windows_on_timeline_properties_changed(players, count, platform_data->session);
+        _windows_on_media_properties_changed(&players[i], platform_data->session);
+        _windows_on_playback_info_changed(&players[i], platform_data->session);
+        _windows_on_timeline_properties_changed(&players[i], platform_data->session);
+        __wnp_update_player(&players[i]);
       }
     }
   }
@@ -476,14 +460,14 @@ static int _windows_thread_func(void* user_data)
 extern "C" wnp_init_ret_t __wnp_platform_windows_init()
 {
   _windows_media_session_manager = MediaSessionManager::RequestAsync().get();
-  thread_atomic_int_store(_windows_state.thread_exit_flag, 0);
-  _windows_state.thread = thread_create(_windows_thread_func, _windows_state.thread_exit_flag, THREAD_STACK_SIZE_DEFAULT);
+  thread_atomic_int_store(&_windows_state.thread_exit_flag, 0);
+  _windows_state.thread = thread_create(_windows_thread_func, &_windows_state.thread_exit_flag, THREAD_STACK_SIZE_DEFAULT);
   return WNP_INIT_SUCCESS;
 }
 
 extern "C" void __wnp_platform_windows_uninit()
 {
-  thread_atomic_int_store(_windows_state.thread_exit_flag, 1);
+  thread_atomic_int_store(&_windows_state.thread_exit_flag, 1);
   thread_join(_windows_state.thread);
   thread_destroy(_windows_state.thread);
   _windows_media_session_manager = NULL;
@@ -518,6 +502,7 @@ extern "C" void __wnp_platform_windows_event(wnp_player_t* player, wnp_event_t e
           success = platform_data->session.TryStopAsync().get();
           break;
       }
+      break;
     case WNP_TRY_SKIP_PREVIOUS:
       success = platform_data->session.TrySkipPreviousAsync().get();
       break;

@@ -296,7 +296,7 @@ void __wnp_remove_player(int player_id)
   _wnp_free_platform_data(player);
 
   for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
-    if (_wnp_state.update_cycle_removed_players[i].id != -1) {
+    if (_wnp_state.update_cycle_removed_players[i].id == -1) {
       _wnp_state.update_cycle_removed_players[i] = *player;
       break;
     }
