@@ -201,17 +201,17 @@ static bool _windows_write_thumbnail(int player_id, char l_appid[WNP_STR_LEN], S
 {
   if (stream == NULL) return false;
 
-  char cover_path[WNP_STR_LEN] = {0};
-  if (!__wnp_get_cover_path(player_id, cover_path)) {
+  char _cover_path[WNP_STR_LEN] = {0};
+  if (!__wnp_get_cover_path(player_id, _cover_path)) {
     return false;
   }
 
-  for (size_t i = 0; cover_path[i] != '\0'; i++) {
-    if (cover_path[i] == '/') {
-      cover_path[i] = '\\';
+  for (size_t i = 0; _cover_path[i] != '\0'; i++) {
+    if (_cover_path[i] == '/') {
+      _cover_path[i] = '\\';
     }
   }
-  *cover_path += 7;
+  char* cover_path = _cover_path + 7;
 
   std::filesystem::path cover_path_path = std::filesystem::path(cover_path);
   std::filesystem::path folder_path = cover_path_path.parent_path();
@@ -227,7 +227,7 @@ static bool _windows_write_thumbnail(int player_id, char l_appid[WNP_STR_LEN], S
     cover_stream.ReadAsync(cover_buffer, cover_buffer.Capacity(), InputStreamOptions::ReadAhead).get();
     FileIO::WriteBufferAsync(cover_file, cover_buffer).get();
 
-    if (_windows_is_win10() && strstr(l_appid, "spotify") != NULL) {
+    if (_windows_is_win10() && (strstr(l_appid, "spotify") != NULL)) {
       Gdiplus::GdiplusStartupInput gdiplusStartupInput;
       ULONG_PTR gdiplusToken;
       Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
@@ -246,13 +246,6 @@ static bool _windows_write_thumbnail(int player_id, char l_appid[WNP_STR_LEN], S
       }
 
       Gdiplus::GdiplusShutdown(gdiplusToken);
-    }
-
-    *cover_path -= 7;
-    for (size_t i = 0; cover_path[i] != '\0'; i++) {
-      if (cover_path[i] == '\\') {
-        cover_path[i] = '/';
-      }
     }
 
     return true;
@@ -509,6 +502,7 @@ extern "C" void __wnp_platform_windows_event(wnp_player_t* player, wnp_event_t e
           success = platform_data->session.TryStopAsync().get();
           break;
       }
+      break;
     case WNP_TRY_SKIP_PREVIOUS:
       success = platform_data->session.TrySkipPreviousAsync().get();
       break;
