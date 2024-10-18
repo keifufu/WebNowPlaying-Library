@@ -152,7 +152,7 @@ static void _web_parse_player_text(wnp_player_t* player, char* data)
 void _web_ws_on_open(cws_client_t* client)
 {
   char buffer[WNP_STR_LEN] = {0};
-  snprintf(buffer, WNP_STR_LEN - 1, "ADAPTER_VERSION %s,WNPLIB_REVISION 3", _web_state.args.adapter_version);
+  snprintf(buffer, WNP_STR_LEN - 1, "ADAPTER_VERSION %s;WNPLIB_REVISION 3", _web_state.args.adapter_version);
   cws_send(client, buffer, strlen(buffer), CWS_TYPE_TEXT);
 }
 
