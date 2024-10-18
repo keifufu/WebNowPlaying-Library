@@ -259,22 +259,10 @@ static void _windows_on_media_properties_changed(wnp_player_t* player, MediaSess
   try {
     MediaProperties info = session.TryGetMediaPropertiesAsync().get();
 
-    _windows_platform_data_t* platform_data = _windows_get_platform_data(player);
-    if (platform_data != NULL) {
-      char cover_path[WNP_STR_LEN] = {0};
-      if (__wnp_get_cover_path(player->id, cover_path)) {
-        if (_windows_write_thumbnail(player->id, platform_data->l_appid, info.Thumbnail())) {
-          _windows_assign_str(player->cover, cover_path);
-          _windows_assign_str(player->cover_src, cover_path);
-        } else {
-          _windows_assign_str(player->cover, "");
-          _windows_assign_str(player->cover_src, "");
-        }
-      }
-    }
-
     _windows_assign_hstr(player->artist, info.Artist(), false);
     _windows_assign_hstr(player->album, info.AlbumTitle(), false);
+
+    bool should_write_cover = false;
 
     char new_title[WNP_STR_LEN] = {0};
     _windows_assign_hstr(new_title, info.Title(), false);
@@ -284,6 +272,23 @@ static void _windows_on_media_properties_changed(wnp_player_t* player, MediaSess
         player->active_at = 0;
       } else {
         player->active_at = _windows_timestamp();
+        should_write_cover = true;
+      }
+    }
+
+    if (should_write_cover) {
+      _windows_platform_data_t* platform_data = _windows_get_platform_data(player);
+      if (platform_data != NULL) {
+        char cover_path[WNP_STR_LEN] = {0};
+        if (__wnp_get_cover_path(player->id, cover_path)) {
+          if (_windows_write_thumbnail(player->id, platform_data->l_appid, info.Thumbnail())) {
+            _windows_assign_str(player->cover, cover_path);
+            _windows_assign_str(player->cover_src, cover_path);
+          } else {
+            _windows_assign_str(player->cover, "");
+            _windows_assign_str(player->cover_src, "");
+          }
+        }
       }
     }
 
