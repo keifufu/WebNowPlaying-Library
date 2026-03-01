@@ -242,6 +242,7 @@ static void close_client(cws_client_t* client)
     return;
   }
 
+  client->server->on_close(client);
   thread_mutex_lock(&g_clients_mutex);
   client->state = STATE_CLOSED;
   close_fd(client->fd);
@@ -700,14 +701,15 @@ static int client_thread(void* data)
     free(frame.msg);
   }
 
-  client->server->on_close(client);
-
 closed:
-  thread_mutex_lock(&client->lock);
-  if (client->state != STATE_CLOSED) {
-    close_client(client);
+
+  if (thread_atomic_int_load(&g_exit_flag) == 0) {
+    thread_mutex_lock(&client->lock);
+    if (client->state != STATE_CLOSED) {
+      close_client(client);
+    }
+    thread_mutex_unlock(&client->lock);
   }
-  thread_mutex_unlock(&client->lock);
 
   return 0;
 }
@@ -800,13 +802,14 @@ int cws_start(cws_server_t server)
 
 int cws_stop()
 {
+  thread_atomic_int_store(&g_exit_flag, 1);
+
   for (int i = 0; i < MAX_CLIENTS; i++) {
     if (g_clients[i].fd != -1) {
       close_client(&g_clients[i]);
     }
   }
 
-  thread_atomic_int_store(&g_exit_flag, 1);
   thread_mutex_term(&g_clients_mutex);
 
   close_fd(g_server_data.fd);

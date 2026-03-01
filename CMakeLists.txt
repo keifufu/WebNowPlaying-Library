@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.29)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_BUILD_TYPE Debug)
 
 project(libwnp)
 file(READ "VERSION" PROJECT_VERSION)
@@ -76,6 +77,7 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
       ole32.lib
       oleaut32.lib
       advapi32.lib
+      runtimeobject.lib
   )
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
   target_link_libraries(${PROJECT_NAME}

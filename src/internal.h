@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 void __wnp_get_args(wnp_args_t* args_out);
+void __wnp_set_use_desktop_players(bool use_desktop_players);
 int __wnp_start_update_cycle(wnp_player_t players_out[WNP_MAX_PLAYERS]);
 int __wnp_add_player(wnp_player_t* player);
 void __wnp_update_player(wnp_player_t* player);

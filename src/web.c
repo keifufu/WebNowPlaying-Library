@@ -16,6 +16,7 @@ typedef enum {
   WNP_PLAYER_UPDATED = 1,
   WNP_PLAYER_REMOVED = 2,
   WNP_EVENT_RESULT = 3,
+  WNP_USE_DESKTOP_PLAYERS = 4
 } _web_message_type_t;
 
 typedef struct {
@@ -151,6 +152,7 @@ static void _web_parse_player_text(wnp_player_t* player, char* data)
 
 void _web_ws_on_open(cws_client_t* client)
 {
+  if (_web_state.args.web_port == 0) return;
   char buffer[WNP_STR_LEN] = {0};
   snprintf(buffer, WNP_STR_LEN - 1, "ADAPTER_VERSION %s;WNPLIB_REVISION 3", _web_state.args.adapter_version);
   cws_send(client, buffer, strlen(buffer), CWS_TYPE_TEXT);
@@ -168,6 +170,7 @@ void _web_ws_on_close(cws_client_t* client)
   }
   __wnp_end_update_cycle();
 
+  if (_web_state.args.web_port == 0) return;
   thread_mutex_lock(&_web_state.cover_buffers_lock);
   for (size_t i = 0; i < WNP_MAX_COVER_BUFFERS; i++) {
     if (_web_state.cover_buffers[i] != NULL && _web_state.cover_buffers[i]->client == client) {
@@ -343,6 +346,10 @@ void _web_ws_on_message(cws_client_t* client, const unsigned char* _msg, uint64_
       __wnp_set_event_result(event_id, atoi(event_result_str));
       break;
     }
+    case WNP_USE_DESKTOP_PLAYERS: {
+      bool use_desktop_players = atoi(data_str) == 1;
+      __wnp_set_use_desktop_players(use_desktop_players);
+    }
   }
 }
 
@@ -360,6 +367,11 @@ wnp_init_ret_t __wnp_platform_web_init()
     return WNP_INIT_SUCCESS;
   }
 
+  for (size_t i = 0; i < WNP_MAX_COVER_BUFFERS; i++) {
+    _web_state.cover_buffers[i] = NULL;
+  }
+  thread_mutex_init(&_web_state.cover_buffers_lock);
+
   int ret = cws_start((cws_server_t){
       .port = _web_state.args.web_port,
       .on_open = &_web_ws_on_open,
@@ -370,11 +382,6 @@ wnp_init_ret_t __wnp_platform_web_init()
   if (ret != 0) {
     return WNP_INIT_WEB_PORT_IN_USE;
   }
-
-  for (size_t i = 0; i < WNP_MAX_COVER_BUFFERS; i++) {
-    _web_state.cover_buffers[i] = NULL;
-  }
-  thread_mutex_init(&_web_state.cover_buffers_lock);
 
   return WNP_INIT_SUCCESS;
 }
@@ -388,7 +395,11 @@ void __wnp_platform_web_uninit()
   cws_stop();
   memset(&_web_state.args, 0, sizeof(wnp_args_t));
   for (size_t i = 0; i < WNP_MAX_COVER_BUFFERS; i++) {
-    _web_state.cover_buffers[i] = NULL;
+    if (_web_state.cover_buffers[i] != NULL) {
+      free(_web_state.cover_buffers[i]->data);
+      free(_web_state.cover_buffers[i]);
+      _web_state.cover_buffers[i] = NULL;
+    }
   }
   thread_mutex_term(&_web_state.cover_buffers_lock);
 }

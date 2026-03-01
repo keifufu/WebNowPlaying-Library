@@ -2,6 +2,14 @@
 #include "internal.h"
 #include "thread.h"
 
+#ifdef _WIN32
+#define F_OK 0
+#define access _access
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
 /**
  * ================================
  * | Definitions and global state |
@@ -20,6 +28,7 @@ typedef struct {
   int update_cycle_added_players[WNP_MAX_PLAYERS];
   int update_cycle_updated_players[WNP_MAX_PLAYERS];
   wnp_player_t update_cycle_removed_players[WNP_MAX_PLAYERS];
+  bool use_desktop_players;
   bool is_initialized;
 } _wnp_state_t;
 
@@ -63,6 +72,58 @@ wnp_player_t WNP_DEFAULT_PLAYER = {
  * | Private internal functions |
  * ==============================
  */
+
+static char* _wnp_get_nodp_path()
+{
+  static char path[WNP_STR_LEN];
+  static bool path_computed = false;
+
+  if (path_computed) {
+    return path;
+  }
+
+  char* file_name = ".wnp_nodp";
+#ifdef _WIN32
+  char* home = getenv("USERPROFILE");
+  if (home == NULL || strlen(home) + strlen(file_name) + 2 > WNP_STR_LEN) {
+    return NULL;
+  }
+
+  strcpy(path, home);
+  strcat(path, "\\");
+  strcat(path, file_name);
+#else
+  // use $XDG_CONFIG_HOME, fallback to just $HOME
+  char* dir = getenv("XDG_CONFIG_HOME");
+  if (dir == NULL) {
+    dir = getenv("HOME");
+  }
+
+  if (dir == NULL || strlen(dir) + strlen(file_name) + 2 > WNP_STR_LEN) {
+    return NULL;
+  }
+
+  strcpy(path, dir);
+  strcat(path, "/");
+  strcat(path, file_name);
+#endif
+
+  path_computed = true;
+  return path;
+}
+
+static bool _wnp_get_use_desktop_players()
+{
+  char* path = _wnp_get_nodp_path();
+  if (path == NULL) return 1;
+  int use_desktop_players = (access(path, F_OK) != 0);
+  return use_desktop_players;
+}
+
+static bool _wnp_is_desktop_player(wnp_player_t* player)
+{
+  return player->platform != WNP_PLATFORM_NONE && player->platform != WNP_PLATFORM_WEB;
+}
 
 static void _wnp_callback(int type, int player_id)
 {
@@ -117,6 +178,7 @@ static void _wnp_recalculate_active_player()
 
   thread_mutex_lock(&_wnp_state.players_lock);
   for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
+    if (!_wnp_state.use_desktop_players && _wnp_is_desktop_player(&_wnp_state.players[i])) continue;
     if (_wnp_state.total_web_players > 0 && _wnp_state.players[i].is_web_browser) continue;
     wnp_player_t* cur = &_wnp_state.players[i];
     if (cur->state == WNP_STATE_PLAYING && cur->volume != 0 && cur->active_at > max_active_at) {
@@ -150,6 +212,9 @@ static int _wnp_get_all_players_lockable(wnp_player_t players_out[WNP_MAX_PLAYER
   if (lock) thread_mutex_lock(&_wnp_state.players_lock);
   for (size_t i = 0; i < WNP_MAX_PLAYERS; i++) {
     if (_wnp_state.players[i].id != -1) {
+      if (!_wnp_state.use_desktop_players && _wnp_is_desktop_player(&_wnp_state.players[i])) {
+        continue;
+      }
       if (skip_browsers && _wnp_state.total_web_players > 0 && _wnp_state.players[i].is_web_browser) continue;
       if (players_out != NULL) {
         players_out[count] = _wnp_state.players[i];
@@ -209,6 +274,23 @@ void _wnp_free_platform_data(wnp_player_t* player)
 void __wnp_get_args(wnp_args_t* args_out)
 {
   *args_out = _wnp_state.args;
+}
+
+void __wnp_set_use_desktop_players(bool use_desktop_players)
+{
+  char* path = _wnp_get_nodp_path();
+  if (path == NULL) return;
+  if (use_desktop_players) {
+    if (access(path, F_OK) == 0) {
+      remove(path);
+    }
+  } else {
+    if (access(path, F_OK) != 0) {
+      FILE* fptr = fopen(path, "w");
+      fclose(fptr);
+    }
+  }
+  _wnp_state.use_desktop_players = use_desktop_players;
 }
 
 int __wnp_start_update_cycle(wnp_player_t players_out[WNP_MAX_PLAYERS])
@@ -529,6 +611,7 @@ static void _wnp_init_state(wnp_args_t* args)
     _wnp_state.update_cycle_updated_players[i] = -1;
     _wnp_state.update_cycle_removed_players[i] = WNP_DEFAULT_PLAYER;
   }
+  _wnp_state.use_desktop_players = _wnp_get_use_desktop_players();
 }
 
 /**
@@ -579,8 +662,8 @@ wnp_init_ret_t wnp_init(wnp_args_t* args)
     for (size_t i = 0; i < uninit_num; i++) {
       uninit_functions[i]();
     }
-    _wnp_init_state(false);
     _wnp_state.is_initialized = false;
+    _wnp_init_state(NULL);
   }
 
   return retval;
@@ -606,8 +689,8 @@ void wnp_uninit()
 #endif /* WNP_BUILD_PLATFORM_WINDOWS */
 
   /* cleanup state */
-  _wnp_state.is_initialized = true;
-  _wnp_init_state(false);
+  _wnp_state.is_initialized = false;
+  _wnp_init_state(NULL);
   /* end cleanup state */
 }
 
@@ -632,7 +715,8 @@ bool wnp_get_player(int player_id, wnp_player_t* player_out)
 
   thread_mutex_lock(&_wnp_state.players_lock);
   wnp_player_t* player = &_wnp_state.players[player_id];
-  if (player->id != player_id || (_wnp_state.total_web_players > 0 && player->is_web_browser)) {
+  if (player->id != player_id || (_wnp_state.total_web_players > 0 && player->is_web_browser) ||
+      (!_wnp_state.use_desktop_players && _wnp_is_desktop_player(player))) {
     thread_mutex_unlock(&_wnp_state.players_lock);
     return false;
   }

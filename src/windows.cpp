@@ -42,7 +42,6 @@ typedef winrt::Windows::Storage::Streams::IRandomAccessStreamReference StreamRef
  * ================================
  */
 
-MediaSessionManager _windows_media_session_manager = NULL;
 typedef struct {
   thread_ptr_t thread;
   thread_atomic_int_t thread_exit_flag;
@@ -425,6 +424,7 @@ static void _windows_on_sessions_changed(MediaSessionManager* manager)
 
 static int _windows_thread_func(void* user_data)
 {
+  MediaSessionManager windows_media_session_manager = MediaSessionManager::RequestAsync().get();
   thread_timer_t timer;
   thread_timer_init(&timer);
   size_t i = 0;
@@ -432,7 +432,7 @@ static int _windows_thread_func(void* user_data)
   while (thread_atomic_int_load(exit_flag) == 0) {
     i++;
     if (i % 2 == 0) {
-      _windows_on_sessions_changed(&_windows_media_session_manager);
+      _windows_on_sessions_changed(&windows_media_session_manager);
     }
     wnp_player_t players[WNP_MAX_PLAYERS] = {0};
     int count = __wnp_start_update_cycle(players);
@@ -462,9 +462,14 @@ static int _windows_thread_func(void* user_data)
  * =============================
  */
 
+int __cdecl CrtDbgHook(int nReportType, char* szMsg, int* pnRet)
+{
+  return TRUE;
+}
+
 extern "C" wnp_init_ret_t __wnp_platform_windows_init()
 {
-  _windows_media_session_manager = MediaSessionManager::RequestAsync().get();
+  _CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, CrtDbgHook);
   thread_atomic_int_store(&_windows_state.thread_exit_flag, 0);
   _windows_state.thread = thread_create(_windows_thread_func, &_windows_state.thread_exit_flag, THREAD_STACK_SIZE_DEFAULT);
   return WNP_INIT_SUCCESS;
@@ -475,7 +480,6 @@ extern "C" void __wnp_platform_windows_uninit()
   thread_atomic_int_store(&_windows_state.thread_exit_flag, 1);
   thread_join(_windows_state.thread);
   thread_destroy(_windows_state.thread);
-  _windows_media_session_manager = NULL;
 }
 
 extern "C" void __wnp_platform_windows_free(void* _platform_data)
